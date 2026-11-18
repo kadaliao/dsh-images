@@ -18,7 +18,7 @@ and download.
 
 ## Install
 
-Add this repository's index in DeepSeek Harness (**Plugins → Discover → Sources**):
+Add the [DSH Plugins](https://github.com/kadaliao/dsh-plugins) index in DeepSeek Harness (**Plugins → Discover → Sources**):
 
 ```
 https://raw.githubusercontent.com/kadaliao/dsh-plugins/main/marketplace.json
@@ -27,11 +27,13 @@ https://raw.githubusercontent.com/kadaliao/dsh-plugins/main/marketplace.json
 then install **Images**. The Discover tab is part of the experimental **Custom plugin markets**
 feature; turn it on under **Plugins → Experimental plugins** if you don't see it.
 
-Without Discover, paste the Git spec into the plugin manager:
+Without Discover, paste the package name into the plugin manager:
 
 ```
-git+https://github.com/kadaliao/dsh-plugins.git#main&path:/plugins/images
+@kadaliao/dsh-images
 ```
+
+For the latest unreleased code, use the Git spec `git+https://github.com/kadaliao/dsh-images.git#main` instead.
 
 Then open **Images** in the left sidebar, click **Settings**, and name the image model (see
 [Settings](#settings)). Refresh the page once after installing.
@@ -228,6 +230,6 @@ Harness records as for any tool.
 <summary>Development</summary>
 
 Repository layout, tests, and the release checklist are in
-[DEVELOPMENT.md](../../DEVELOPMENT.md).
+[DEVELOPMENT.md](https://github.com/kadaliao/dsh-plugins/blob/main/DEVELOPMENT.md).
 
 </details>

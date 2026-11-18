@@ -16,7 +16,7 @@
 
 ## 安装
 
-在 DeepSeek Harness 里加入本仓库的索引（**Plugins → Discover → Sources**）：
+在 DeepSeek Harness 里加入 [DSH Plugins](https://github.com/kadaliao/dsh-plugins) 的索引（**Plugins → Discover → Sources**）：
 
 ```
 https://raw.githubusercontent.com/kadaliao/dsh-plugins/main/marketplace.json
@@ -25,11 +25,13 @@ https://raw.githubusercontent.com/kadaliao/dsh-plugins/main/marketplace.json
 然后安装 **Images**。Discover 标签属于实验性的 **Custom plugin markets** 功能；看不到的话先在
 **Plugins → Experimental plugins** 里打开。
 
-不用 Discover 也可以把 Git spec 直接粘进插件管理器：
+不用 Discover 的话，把包名贴进插件管理器：
 
 ```
-git+https://github.com/kadaliao/dsh-plugins.git#main&path:/plugins/images
+@kadaliao/dsh-images
 ```
+
+想用还没发布的最新代码，改用 Git spec `git+https://github.com/kadaliao/dsh-images.git#main`。
 
 装好后打开左侧栏的**图片**，点**设置**，填上生图模型（见[设置](#设置)）。安装后刷新一次页面。
 
@@ -189,6 +191,6 @@ Client 半边绘制工具卡片、折叠外的结果行、侧栏入口和面板�
 <details>
 <summary>开发</summary>
 
-仓库结构、测试和发布清单见 [DEVELOPMENT.zh-CN.md](../../DEVELOPMENT.zh-CN.md)。
+仓库结构、测试和发布清单见 [DEVELOPMENT.zh-CN.md](https://github.com/kadaliao/dsh-plugins/blob/main/DEVELOPMENT.zh-CN.md)。
 
 </details>

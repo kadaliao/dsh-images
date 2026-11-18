@@ -41,10 +41,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kadaliao/dsh-plugins.git",
-    "directory": "plugins/images"
+    "url": "git+https://github.com/kadaliao/dsh-images.git"
   },
-  "homepage": "https://github.com/kadaliao/dsh-plugins/tree/main/plugins/images",
+  "homepage": "https://github.com/kadaliao/dsh-images#readme",
+  "bugs": "https://github.com/kadaliao/dsh-images/issues",
   "license": "MIT",
   "keywords": [
     "dsh",
