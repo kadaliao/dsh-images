@@ -31,6 +31,12 @@ https://raw.githubusercontent.com/kadaliao/dsh-plugins/main/marketplace.json
 @kadaliao/dsh-images
 ```
 
+也可以在终端里用 `dsh` 命令行装（桌面版用 `--profile desktop`，装完重启 Harness）：
+
+```
+dsh plugin --profile web add @kadaliao/dsh-images
+```
+
 想用还没发布的最新代码，改用 Git spec `git+https://github.com/kadaliao/dsh-images.git#main`。
 
 装好后打开左侧栏的**图片**，点**设置**，填上生图模型（见[设置](#设置)）。安装后刷新一次页面。

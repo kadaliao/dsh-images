@@ -33,6 +33,13 @@ Without Discover, paste the package name into the plugin manager:
 @kadaliao/dsh-images
 ```
 
+Or from a terminal with the `dsh` CLI (`--profile desktop` for the desktop app; restart Harness
+afterwards):
+
+```
+dsh plugin --profile web add @kadaliao/dsh-images
+```
+
 For the latest unreleased code, use the Git spec `git+https://github.com/kadaliao/dsh-images.git#main` instead.
 
 Then open **Images** in the left sidebar, click **Settings**, and name the image model (see
