@@ -163,7 +163,7 @@ test('the client registers the tool view, the panel icon, the panel and /images'
   assert.equal(seen.slots[2].options.label(), 'Images');
   assert.equal(seen.locale.ns, 'images');
   assert.deepEqual(Object.keys(seen.locale.dict.zh).sort(), Object.keys(seen.locale.dict.en).sort());
-  assert.deepEqual(seen.injected, ['remote', 'remote.pluginManager', 'remoteAccess', 'slots', 'commandUi']);
+  assert.deepEqual(seen.injected, ['remote', 'remote.pluginManager', 'remoteAccess', 'commandUi']);
   const [decoration] = seen.decorations;
   assert.equal(decoration.name, 'images');
   assert.equal(decoration.available(), true);
