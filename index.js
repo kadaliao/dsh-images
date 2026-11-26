@@ -22,7 +22,7 @@ import { catalogNames, catalogPerImage, createCatalog, lookupCatalog } from './l
 import { createStore, newId } from './lib/store.mjs';
 import { GIF_FAMILIES, LAYOUTS, frameDelay, gifCapable, layoutFor, sheetPrompt, sheetToGif } from './lib/animate.mjs';
 import { CATEGORIES, PNG_KEYWORD, encodeRecipe, normalizeRecipe, parseRecipeText, pick, portable, recipeFromImage, recipeInPng, renderPrompt, searchRecipes, shareText, withPngText } from './lib/recipes.mjs';
-import { COMMUNITY_REPO, createLibrary, parseRef } from './lib/library.mjs';
+import { COMMUNITY_REPO, createLibrary, parseRef, readHead } from './lib/library.mjs';
 
 // The registry wants the compiled definition `defineTool` makes. Outside a
 // Harness (the tests) the raw definition stands in for it.
@@ -1270,11 +1270,36 @@ function mountRecipeRoutes(scope, webServer, library, store) {
     }
     return Boolean(r.coverFile || r.cover);
   };
+  // A cover's pixel size, read from its header once per version of the file, so a card can
+  // take the cover's own shape before the picture loads. Null while it is not on disk.
+  const coverSizes = new Map();
+  const coverSizeOf = (r) => {
+    const file = library.coverFileOf(r);
+    if (!file) return null;
+    try {
+      const { size, mtimeMs } = statSync(file);
+      const key = `${size}:${mtimeMs}`;
+      const known = coverSizes.get(file);
+      if (known?.key === key) return known.dims;
+      const { width, height } = dimensionsOf(readHead(file, 64 * 1024));
+      const dims = width > 0 && height > 0 ? { width, height } : null;
+      coverSizes.set(file, { key, dims });
+      return dims;
+    } catch {
+      return null;
+    }
+  };
   const publicRecipe = (r, uses = usesOf()) => {
     const { coverFile, ...rest } = r;
     const cover = hasCover(r);
     const version = String(coverFile ?? r.cover ?? '').length + (r.updatedAt ?? 0);
-    return { ...rest, ...(cover ? { coverUrl: `${COVER_ROUTE}/${encodeURIComponent(r.ref)}?v=${version}` } : {}), uses: uses.get(r.ref) ?? 0 };
+    const dims = cover ? coverSizeOf(r) : null;
+    return {
+      ...rest,
+      ...(cover ? { coverUrl: `${COVER_ROUTE}/${encodeURIComponent(r.ref)}?v=${version}` } : {}),
+      ...(dims ? { coverWidth: dims.width, coverHeight: dims.height } : {}),
+      uses: uses.get(r.ref) ?? 0,
+    };
   };
   const listing = () => {
     const uses = usesOf();

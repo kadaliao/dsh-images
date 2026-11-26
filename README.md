@@ -157,8 +157,8 @@ and [awesome-nano-banana-pro-prompts](https://github.com/YouMind-OpenLab/awesome
 (CC0) and [jamez-bondos/awesome-gpt4o-images](https://github.com/jamez-bondos/awesome-gpt4o-images)
 (CC BY 4.0) — turned into templates, with brand and studio names replaced by descriptions of the
 style. Each names its source and original author; [recipes/CREDITS.md](recipes/CREDITS.md) lists
-them all. Every cover was drawn with gpt-image-2.6 from the recipe as shipped; where the model
-picked a shape far from the card's, the cover is padded rather than cropped.
+them all. Every cover was drawn with gpt-image-2.6 from the recipe as shipped. A card takes its
+cover's own shape (from 1:2 tall to 3:1 wide), so nothing is cut off.
 
 **Your own.** In the gallery, a picture's **⋯ menu** has:
 

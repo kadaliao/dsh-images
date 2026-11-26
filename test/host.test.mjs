@@ -620,6 +620,10 @@ test('image_recipes finds, reads, keeps and imports recipes', async () => {
   const cover = await h.request(neon.coverUrl);
   assert.equal(cover.status, 200);
   assert.ok(cover.body.equals(PNG_2x3));
+  // The listing gives each cover's pixel size, so a card can take its shape before it loads.
+  assert.deepEqual([neon.coverWidth, neon.coverHeight], [2, 3]);
+  const builtins = listing.recipes.filter((r) => r.origin === 'builtin');
+  assert.ok(builtins.length > 0 && builtins.every((r) => r.coverWidth > 0 && r.coverHeight > 0), 'every built-in cover is measured');
 });
 
 test('the recipe routes list, keep, pass on and take in recipes', async () => {

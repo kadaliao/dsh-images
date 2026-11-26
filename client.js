@@ -2011,7 +2011,19 @@ window.__ModuleLoader__.load({
       const want = String(lang ?? '').startsWith('zh') ? 'zh' : 'en';
       return text[want] ?? text[want === 'zh' ? 'en' : 'zh'] ?? '';
     }
-    const ratioOf = (size) => (size === '1536x1024' ? '3 / 2' : size === '1024x1536' ? '2 / 3' : '1 / 1');
+    /**
+     * Width over height of a recipe's cover: the picture's own (as the listing gives it, or as
+     * it loaded), else the shape of the recipe's size.
+     */
+    function coverRatio(recipe, loaded) {
+      const w = loaded?.width || recipe.coverWidth;
+      const ht = loaded?.height || recipe.coverHeight;
+      if (recipe.coverUrl && w > 0 && ht > 0) return w / ht;
+      const size = recipe.params?.size;
+      return size === '1536x1024' ? 3 / 2 : size === '1024x1536' ? 2 / 3 : 1;
+    }
+    /** A card shows a cover in its own shape, from 1:2 tall to 3:1 wide; past that it is cropped. */
+    const cardAspect = (ratio) => String(Math.round(Math.min(3, Math.max(1 / 2, ratio)) * 10_000) / 10_000);
     /** `github:ana` as `@ana`; any other author as written. */
     const authorName = (author) => String(author ?? '').replace(/^github:/, '@');
     const isRemote = (ref) => typeof ref === 'string' && ref !== '' && !/^(builtin|mine|image):/.test(ref);
@@ -2243,7 +2255,7 @@ window.__ModuleLoader__.load({
     }
 
     /** A recipe's cover: its picture, or a gradient of its category with its title. */
-    function RecipeCover({ recipe, lang, big = false, fit = 'cover' }) {
+    function RecipeCover({ recipe, lang, big = false, fit = 'cover', onSize }) {
       const [broken, setBroken] = useState(false);
       const [from, to, ink] = tintOf(recipe.category);
       if (recipe.coverUrl && !broken) {
@@ -2254,6 +2266,7 @@ window.__ModuleLoader__.load({
           decoding: 'async',
           draggable: false,
           onError: () => setBroken(true),
+          onLoad: onSize ? (e) => onSize({ width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight }) : undefined,
           style: { display: 'block', width: '100%', height: '100%', objectFit: fit, background: C.layer2 },
         });
       }
@@ -2268,6 +2281,10 @@ window.__ModuleLoader__.load({
     }
 
     function RecipeCard({ t, lang, recipe, onOpen }) {
+      // A cover the listing could not measure yet (a community one not downloaded) takes its
+      // shape once it loads.
+      const [loaded, setLoaded] = useState(null);
+      const onSize = recipe.coverWidth ? undefined : (dims) => dims.width > 0 && dims.height > 0 && setLoaded(dims);
       const badges = [];
       if ((recipe.inputs ?? []).length > 0) badges.push(h(Badge, { key: 'in' }, t('badgePhoto')));
       if (recipe.params?.frames) badges.push(h(Badge, { key: 'gif' }, 'GIF'));
@@ -2295,8 +2312,8 @@ window.__ModuleLoader__.load({
         },
         h(
           'div',
-          { style: { position: 'relative', aspectRatio: ratioOf(recipe.params?.size), lineHeight: 0, overflow: 'hidden' } },
-          h(RecipeCover, { recipe, lang }),
+          { style: { position: 'relative', aspectRatio: cardAspect(coverRatio(recipe, loaded)), lineHeight: 0, overflow: 'hidden' } },
+          h(RecipeCover, { recipe, lang, onSize }),
           badges.length > 0 ? h('div', { style: { position: 'absolute', top: 8, left: 8, display: 'flex', gap: 5, lineHeight: 1 } }, badges) : null,
         ),
         h(
@@ -2620,7 +2637,17 @@ window.__ModuleLoader__.load({
         ];
       } else {
         body = [
-          h('div', { key: 'cover', style: { borderRadius: 12, overflow: 'hidden', maxHeight: 340, aspectRatio: ratioOf(recipe.params?.size), background: C.layer2, lineHeight: 0 } }, h(RecipeCover, { recipe, lang, big: true, fit: 'cover' })),
+          // The whole cover, at most 340 high: a box of its shape, centred. `contain` keeps it whole
+          // even when its size was not known yet.
+          h(
+            'div',
+            {
+              key: 'cover',
+              'data-dsh-images-recipe-cover': true,
+              style: { borderRadius: 12, overflow: 'hidden', width: recipe.coverUrl ? `min(100%, ${Math.round(340 * coverRatio(recipe))}px)` : undefined, margin: '0 auto', maxHeight: 340, aspectRatio: String(Math.round(coverRatio(recipe) * 10_000) / 10_000), background: C.layer2, lineHeight: 0 },
+            },
+            h(RecipeCover, { recipe, lang, big: true, fit: recipe.coverUrl ? 'contain' : 'cover' }),
+          ),
           h(
             'div',
             { key: 'head', style: { display: 'flex', flexDirection: 'column', gap: 4 } },

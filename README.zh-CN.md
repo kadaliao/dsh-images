@@ -126,7 +126,7 @@ dsh plugin --profile web add @kadaliao/dsh-images
 [Evolink-AI/awesome-gpt-image-2-API-Prompts](https://github.com/Evolink-AI/awesome-gpt-image-2-API-Prompts)（CC0）、
 [jamez-bondos/awesome-gpt4o-images](https://github.com/jamez-bondos/awesome-gpt4o-images)（CC BY 4.0）——做成了模板，
 品牌和工作室的名字换成了对风格本身的描述。每个都注明来源和原作者，完整清单见 [recipes/CREDITS.md](recipes/CREDITS.md)。
-封面都是用 gpt-image-2.6 按内置的配方实际画出来的；模型给的比例和卡片差太多时，补了边而不裁掉内容。
+封面都是用 gpt-image-2.6 按内置的配方实际画出来的。卡片按封面本身的比例显示（最高 1:2，最宽 3:1），内容不会被裁掉。
 
 **我的玩法。** 图库里图片的 **⋯ 菜单**有：
 

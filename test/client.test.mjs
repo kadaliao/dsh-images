@@ -1008,3 +1008,56 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
     delete globalThis.localStorage;
   }
 });
+
+test('a recipe card takes its cover\'s own shape, not the recipe size\'s, and the open recipe shows the cover whole', async () => {
+  const { exports, hooks } = await loadClient();
+  const { ctx, seen } = fakeContext();
+  exports.apply(ctx);
+  const panel = seen.slots.find((s) => s.options.name === 'main').component;
+  const stored = new Map([['dsh-images:tab', 'recipes']]);
+  globalThis.localStorage = { getItem: (k) => stored.get(k) ?? null, setItem: (k, v) => stored.set(k, v) };
+  const base = { summary: {}, category: 'illustration', tags: [], inputs: [], slots: [], prompt: 'p', uses: 0 };
+  const recipes = [
+    { ...base, ref: 'builtin:wide', origin: 'builtin', id: 'wide', title: { en: 'Wide' }, params: { size: '1024x1536' }, coverUrl: '/c/wide', coverWidth: 1536, coverHeight: 1024 },
+    { ...base, ref: 'builtin:strip', origin: 'builtin', id: 'strip', title: { en: 'Strip' }, params: { size: '1536x1024' }, coverUrl: '/c/strip', coverWidth: 3000, coverHeight: 600 },
+    { ...base, ref: 'community:late', origin: 'community', id: 'late', title: { en: 'Late' }, params: { size: '1024x1536' }, coverUrl: '/c/late', stats: {} },
+    { ...base, ref: 'mine:bare', origin: 'mine', id: 'bare', title: { en: 'Bare' }, params: { size: '1536x1024' }, createdAt: 1 },
+  ];
+  globalThis.fetch = async (url) => {
+    if (String(url).startsWith('/__dsh_images/recipes')) return { ok: true, json: async () => ({ ok: true, sources: [{ key: 'builtin', kind: 'builtin', count: 2 }], recipes }) };
+    return { ok: true, json: async () => ({ items: [], hasMore: false, total: 0 }) };
+  };
+  try {
+    hooks.reset();
+    panel({});
+    await flush();
+    await flush();
+    const shapes = () => {
+      hooks.rewind();
+      const tree = panel({});
+      const out = {};
+      for (const card of findAll(tree, (n) => n.props['data-dsh-images-recipe'])) out[card.props['data-dsh-images-recipe']] = findAll(card, (n) => n.props.style?.aspectRatio)[0].props.style.aspectRatio;
+      return { tree, out };
+    };
+    let { tree, out } = shapes();
+    // The cover's own shape; a 5:1 strip is held at 3:1; without a cover, the size's shape.
+    assert.deepEqual(out, { 'mine:bare': '1.5', 'builtin:wide': '1.5', 'builtin:strip': '3', 'community:late': '0.6667' });
+    // A cover the listing could not measure takes its shape once it has loaded.
+    const late = findAll(tree, (n) => n.props['data-dsh-images-recipe'] === 'community:late')[0];
+    findAll(late, (n) => n.type === 'img')[0].props.onLoad({ currentTarget: { naturalWidth: 1200, naturalHeight: 1200 } });
+    ({ tree, out } = shapes());
+    assert.equal(out['community:late'], '1');
+    assert.equal(findAll(findAll(tree, (n) => n.props['data-dsh-images-recipe'] === 'builtin:wide')[0], (n) => n.type === 'img')[0].props.onLoad, undefined, 'a measured cover needs no second look');
+
+    // Opened: a box of the cover's shape, at most 340 high, with all of the picture in it.
+    findAll(tree, (n) => n.props['data-dsh-images-recipe'] === 'builtin:wide')[0].props.onClick();
+    hooks.rewind();
+    tree = panel({});
+    const cover = findAll(tree, (n) => n.props['data-dsh-images-recipe-cover'])[0];
+    assert.equal(cover.props.style.aspectRatio, '1.5');
+    assert.equal(cover.props.style.width, 'min(100%, 510px)');
+    assert.equal(findAll(cover, (n) => n.type === 'img')[0].props.style.objectFit, 'contain');
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
