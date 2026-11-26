@@ -7,7 +7,7 @@ English | [简体中文](README.zh-CN.md)
 Gives the conversation model a `generate_image` tool backed by the image model your provider serves.
 Say "draw me a poster for the launch" and the picture appears in the conversation, right where it
 was made. Everything ever drawn is collected in an **Images** panel: a gallery to browse, enlarge
-and download. Its **Recipes** tab holds tested prompt templates to start from — 40 built in, your
+and download. Its **Recipes** tab holds tested prompt templates to start from — 191 built in, your
 own, and the community's — and every recipe can be passed on as a line of text, a picture, or a
 community submission.
 
@@ -144,15 +144,21 @@ is labelled with its recipe in the conversation and the gallery; click the label
 The model can find recipes by itself, too: ask "有什么杂志封面的玩法？" or "draw this as a chalkboard
 lesson" and it searches them with the `image_recipes` tool.
 
-**Built-in recipes.** 40, adapted from the most-starred permissively licensed prompt collections on
-GitHub — [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) (MIT),
+**Built-in recipes.** 191, across photo makeovers, hand-drawn, editorial and posters, infographics,
+3D, stickers and GIF loops, illustration, product shots and comics — adapted from the most-starred
+permissively licensed prompt collections on GitHub —
+[JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) (MIT),
 [PicoTrex/Awesome-Nano-Banana-images](https://github.com/PicoTrex/Awesome-Nano-Banana-images)
 (Apache-2.0), [YouMind-OpenLab/awesome-gpt-image-2](https://github.com/YouMind-OpenLab/awesome-gpt-image-2)
 and [awesome-nano-banana-pro-prompts](https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts)
 (CC BY 4.0), [ZeroLu/awesome-nanobanana-pro](https://github.com/ZeroLu/awesome-nanobanana-pro)
-(MIT) — turned into templates, with brand and studio names replaced by descriptions of the style.
-Each names its source and original author; [recipes/CREDITS.md](recipes/CREDITS.md) lists them all.
-Every cover was drawn with gpt-image-2.6 from the recipe as shipped.
+(MIT), [freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2) (MIT),
+[Evolink-AI/awesome-gpt-image-2-API-Prompts](https://github.com/Evolink-AI/awesome-gpt-image-2-API-Prompts)
+(CC0) and [jamez-bondos/awesome-gpt4o-images](https://github.com/jamez-bondos/awesome-gpt4o-images)
+(CC BY 4.0) — turned into templates, with brand and studio names replaced by descriptions of the
+style. Each names its source and original author; [recipes/CREDITS.md](recipes/CREDITS.md) lists
+them all. Every cover was drawn with gpt-image-2.6 from the recipe as shipped; where the model
+picked a shape far from the card's, the cover is padded rather than cropped.
 
 **Your own.** In the gallery, a picture's **⋯ menu** has:
 

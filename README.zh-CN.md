@@ -6,7 +6,7 @@
 
 给对话模型一个 `generate_image` 工具，用你供应商提供的生图模型出图。说一句"给发布会画张海报"，
 图就出现在对话里、就在它生成的位置。画过的所有图都收在一个「图片」面板里：瀑布流浏览、放大、下载。
-面板的「玩法」页收着试过效果的提示词模板：40 个内置的、你自己的、社区的，一键套用；每个玩法都能变成一段文字、
+面板的「玩法」页收着试过效果的提示词模板：191 个内置的、你自己的、社区的，一键套用；每个玩法都能变成一段文字、
 一张图，或者投稿到社区。
 
 ```
@@ -115,14 +115,18 @@ dsh plugin --profile web add @kadaliao/dsh-images
 
 模型也会自己找玩法：问一句"有什么杂志封面的玩法？"或者"把这个画成黑板课堂"，它会用 `image_recipes` 工具去搜。
 
-**内置玩法。** 40 个，改编自 GitHub 上 star 最多、许可允许转载的提示词合集——
+**内置玩法。** 191 个，覆盖照片改造、手绘、杂志海报、知识图解、3D 手办、表情动图、插画、产品图、漫画九类，
+改编自 GitHub 上 star 最多、许可允许转载的提示词合集——
 [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills)（MIT）、
 [PicoTrex/Awesome-Nano-Banana-images](https://github.com/PicoTrex/Awesome-Nano-Banana-images)（Apache-2.0）、
 [YouMind-OpenLab/awesome-gpt-image-2](https://github.com/YouMind-OpenLab/awesome-gpt-image-2) 和
 [awesome-nano-banana-pro-prompts](https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts)（CC BY 4.0）、
-[ZeroLu/awesome-nanobanana-pro](https://github.com/ZeroLu/awesome-nanobanana-pro)（MIT）——做成了模板，品牌和
-工作室的名字换成了对风格本身的描述。每个都注明来源和原作者，完整清单见 [recipes/CREDITS.md](recipes/CREDITS.md)。
-封面都是用 gpt-image-2.6 按内置的配方实际画出来的。
+[ZeroLu/awesome-nanobanana-pro](https://github.com/ZeroLu/awesome-nanobanana-pro)（MIT）、
+[freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2)（MIT）、
+[Evolink-AI/awesome-gpt-image-2-API-Prompts](https://github.com/Evolink-AI/awesome-gpt-image-2-API-Prompts)（CC0）、
+[jamez-bondos/awesome-gpt4o-images](https://github.com/jamez-bondos/awesome-gpt4o-images)（CC BY 4.0）——做成了模板，
+品牌和工作室的名字换成了对风格本身的描述。每个都注明来源和原作者，完整清单见 [recipes/CREDITS.md](recipes/CREDITS.md)。
+封面都是用 gpt-image-2.6 按内置的配方实际画出来的；模型给的比例和卡片差太多时，补了边而不裁掉内容。
 
 **我的玩法。** 图库里图片的 **⋯ 菜单**有：
 

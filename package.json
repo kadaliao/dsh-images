@@ -1,6 +1,6 @@
 {
   "name": "@kadaliao/dsh-images",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "type": "module",
   "description": "Ask for a picture and get one: a generate_image tool for the conversation model, backed by your provider's image model; an Images panel with a gallery of everything it drew; and recipes — tested prompt templates, built in, your own, or from the community — to start from, save, and share.",
   "exports": {
