@@ -884,10 +884,22 @@ test('the model picker filters loosely, carries the gateway prefix to catalog mo
   hooks.runCleanups();
 });
 
-test('the Recipes tab lists recipes, filters them, and a recipe starts a conversation with its blanks filled', async () => {
+test('the Recipes tab lists recipes, filters them, and a recipe starts a conversation with its blanks filled, in the Images workspace', async () => {
   const { exports, hooks } = await loadClient();
   const drafts = [];
-  const { ctx, seen } = fakeContext({ services: { uiWorkspace: { startSession: (workspaceId, options) => drafts.push({ workspaceId, options }) } } });
+  const registered = [];
+  const { ctx, seen } = fakeContext({
+    services: {
+      uiWorkspace: { startSession: (workspaceId, options) => drafts.push({ workspaceId, options }) },
+      workspaces: {
+        create: async ({ path }) => {
+          registered.push(path);
+          return { workspaceId: 'ws-images', path, displayTitle: 'Images' };
+        },
+        list: { getSnapshot: () => ({ phase: 'ready', items: [{ workspaceId: 'ws-dsh', path: '/src/dsh' }] }) },
+      },
+    },
+  });
   exports.apply(ctx);
   const panel = seen.slots.find((s) => s.options.name === 'main').component;
   const stored = new Map([['dsh-images:tab', 'recipes']]);
@@ -917,6 +929,7 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
     if (init?.method === 'POST') {
       const body = JSON.parse(init.body);
       posts.push({ url: String(url), body });
+      if (String(url) === '/__dsh_images/workspace') return { ok: true, json: async () => ({ ok: true, path: '/home/u/.dsh/images/workspace', workspaceId: 'ws-images' }) };
       return { ok: true, json: async () => (body.action === 'export' ? { ok: true, code: 'dshimg1.abc', text: 'share text dshimg1.abc' } : { ok: true }) };
     }
     if (String(url).startsWith('/__dsh_images/recipes')) {
@@ -966,7 +979,14 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
     hooks.rewind();
     tree = panel({});
     findAll(tree, (n) => n.props['data-dsh-images-start'])[0].props.onClick();
+    await flush();
+    await flush();
+    await flush();
     assert.equal(drafts.length, 1);
+    // Its own workspace, named after the panel; never the one the person was last in.
+    assert.deepEqual(posts.find((p) => p.url === '/__dsh_images/workspace'), { url: '/__dsh_images/workspace', body: { title: 'Images' } });
+    assert.deepEqual(registered, ['/home/u/.dsh/images/workspace']);
+    assert.equal(drafts[0].workspaceId, 'ws-images');
     assert.equal(drafts[0].options.whenDraftExists, 'replace');
     assert.equal(drafts[0].options.prompt, 'Draw a picture with the "Desk figurine" recipe (recipe: builtin:desk-figurine).\nScene: a bookshelf\nAlso: glossy paint\nAttached: A photo of a pet.');
     hooks.rewind();

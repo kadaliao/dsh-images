@@ -29,6 +29,7 @@ window.__ModuleLoader__.load({
     const MODELS_ROUTE = '/__dsh_images/models';
     const CATALOG_ROUTE = '/__dsh_images/catalog';
     const RECIPES_ROUTE = '/__dsh_images/recipes';
+    const WORKSPACE_ROUTE = '/__dsh_images/workspace';
     const SIZES = ['1024x1024', '1536x1024', '1024x1536'];
     const QUALITIES = ['low', 'medium', 'high'];
     const PAGE = 40;
@@ -2447,15 +2448,23 @@ window.__ModuleLoader__.load({
       const remote = isRemote(recipe.ref);
       const title = pickText(recipe.title, lang);
 
+      const [starting, setStarting] = useState(false);
       const start = () => {
+        if (starting) return;
         const text = draftMessage(t, lang, recipe, values, extra);
-        if (drafts?.start?.(text)) {
-          onToast(t((recipe.inputs ?? []).length > 0 ? 'draftStartedAttach' : 'draftStarted'));
-          onClose();
-        } else {
-          copyText(text);
-          onToast(t('draftCopied'));
-        }
+        setStarting(true);
+        Promise.resolve(drafts?.start?.(text))
+          .catch(() => false)
+          .then((started) => {
+            setStarting(false);
+            if (started) {
+              onToast(t((recipe.inputs ?? []).length > 0 ? 'draftStartedAttach' : 'draftStarted'));
+              onClose();
+            } else {
+              copyText(text);
+              onToast(t('draftCopied'));
+            }
+          });
       };
       const run = (key, job) => {
         if (busy) return;
@@ -2705,7 +2714,7 @@ window.__ModuleLoader__.load({
         footer = h(
           'div',
           { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-          h(DrawerButton, { primary: true, onClick: start, 'data-dsh-images-start': true }, t(drafts?.available?.() ? 'startRecipe' : 'copyDraft')),
+          h(DrawerButton, { primary: true, onClick: start, disabled: starting, 'data-dsh-images-start': true }, t(drafts?.available?.() ? 'startRecipe' : 'copyDraft')),
           h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, secondary),
         );
       }
@@ -2983,8 +2992,8 @@ window.__ModuleLoader__.load({
         cat_illustration: "Illustration",
         cat_product: "Product",
         cat_comic: "Comic",
-        draftStarted: "A new conversation is ready with the recipe in the composer: press Send.",
-        draftStartedAttach: "A new conversation is ready: attach the picture(s) in the composer, then send.",
+        draftStarted: "A new conversation is ready in the Images workspace with the recipe in the composer: press Send.",
+        draftStartedAttach: "A new conversation is ready in the Images workspace: attach the picture(s) in the composer, then send.",
         draftCopied: "Copied the message: paste it into any conversation.",
         codeCopied: "Recipe code copied: send it to anyone who uses DSH Images.",
         cardSaved: "Share card saved: it carries the recipe inside.",
@@ -3206,8 +3215,8 @@ window.__ModuleLoader__.load({
         cat_illustration: "插画",
         cat_product: "产品",
         cat_comic: "漫画",
-        draftStarted: "已新开对话，配方在输入框里，按发送即可。",
-        draftStartedAttach: "已新开对话：先在输入框里附上图片，再发送。",
+        draftStarted: "已在「图片」工作区新开对话，配方在输入框里，按发送即可。",
+        draftStartedAttach: "已在「图片」工作区新开对话：先在输入框里附上图片，再发送。",
         draftCopied: "消息已复制，粘贴到任意对话里即可。",
         codeCopied: "配方串已复制，发给任何用 DSH Images 的人都能用。",
         cardSaved: "分享卡已保存，图片里带着配方。",
@@ -4048,14 +4057,32 @@ window.__ModuleLoader__.load({
         ctx.slots.inject('sidebar.panellist', () =>
           ctx.slots.register({ name: 'sidebar.panellist', id: PANEL_ID, order: 30, label: () => tr('title') }, ImagesGlyph),
         );
-        // A recipe starts a new conversation with its message in the composer, for the user to send.
+        // A recipe starts a new conversation with its message in the composer, for the user to send,
+        // in the Images workspace: without a workspace the Host would pick the one the person is in.
+        const samePath = (a, b) => String(a ?? '').replace(/[\\/]+$/, '') === String(b ?? '').replace(/[\\/]+$/, '');
+        const imagesWorkspace = async () => {
+          const reply = await postJson(WORKSPACE_ROUTE, { title: tr('title') });
+          if (!reply?.ok || typeof reply.path !== 'string') return undefined;
+          // The page's own list must hold the workspace before a conversation opens in it, and
+          // `create` puts it there (it resolves a folder the Host already has).
+          const ws = service('workspaces');
+          if (typeof ws?.create === 'function') {
+            const view = await ws.create({ path: reply.path });
+            if (view?.workspaceId) return view.workspaceId;
+          }
+          const items = snapshot('workspaces')?.items ?? [];
+          return items.find((w) => w.workspaceId === reply.workspaceId || samePath(w.path, reply.path))?.workspaceId;
+        };
         const drafts = {
           available: () => typeof service('uiWorkspace')?.startSession === 'function',
-          start: (prompt) => {
+          /** Resolves false when there is no Images workspace to start in: the sheet copies the message instead. */
+          start: async (prompt) => {
             const ui = service('uiWorkspace');
             if (typeof ui?.startSession !== 'function') return false;
             try {
-              ui.startSession(undefined, { prompt, whenDraftExists: 'replace' });
+              const workspaceId = await imagesWorkspace();
+              if (workspaceId === undefined) return false;
+              ui.startSession(workspaceId, { prompt, whenDraftExists: 'replace' });
               return true;
             } catch {
               return false;

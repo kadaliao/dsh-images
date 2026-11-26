@@ -19,7 +19,7 @@ afterEach(() => {
  * provider profile, a credentials service, an attachment store and the web
  * server's routes. `reply` is what the provider answers.
  */
-function harness({ home, config = { model: 'gpt-image-1' }, reply, status = 200, attachments = true, catalog = LITELLM_SAMPLE, community } = {}) {
+function harness({ home, config = { model: 'gpt-image-1' }, reply, status = 200, attachments = true, catalog = LITELLM_SAMPLE, community, workspaceRegistry } = {}) {
   process.env.DSH_HOME = home ?? mkdtempSync(join(tmpdir(), 'images-home-'));
   const tools = new Map();
   const routes = new Map();
@@ -65,6 +65,7 @@ function harness({ home, config = { model: 'gpt-image-1' }, reply, status = 200,
       unset: async (ref) => void vault.delete(ref),
     },
     agentDefaultModel: { currentSelection: () => ({ provider: 'magpie', model: 'auto/x' }) },
+    workspaceRegistry,
     attachments: attachments
       ? {
           saveImage: async ({ data, mediaType, name }) => ({ attachmentId: `sha256:${data.length}`, mediaType, bytes: data.length, width: 2, height: 3, name }),
@@ -147,8 +148,33 @@ function harness({ home, config = { model: 'gpt-image-1' }, reply, status = 200,
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 300));
 
+test('the workspace route makes the Images workspace: its folder, registered once under the title', async () => {
+  const workspaces = new Map();
+  const registry = {
+    async create(path, title) {
+      if (!workspaces.has(path)) workspaces.set(path, { id: `ws-${workspaces.size + 1}`, path, title });
+      return workspaces.get(path);
+    },
+  };
+  const h = harness({ workspaceRegistry: registry });
+  const dir = join(h.home, 'images', 'workspace');
+  assert.deepEqual(await h.request('/__dsh_images/workspace', { method: 'POST', body: { title: '图片' } }), { ok: true, path: dir, workspaceId: 'ws-1' });
+  assert.ok(existsSync(dir), 'the folder is made');
+  assert.deepEqual(await h.request('/__dsh_images/workspace', { method: 'POST', body: {} }), { ok: true, path: dir, workspaceId: 'ws-1' });
+  assert.equal(workspaces.get(dir).title, '图片', 'a second call does not rename it');
+  h.unload();
+
+  // A configured folder; without a registry the page registers it itself.
+  const own = join(mkdtempSync(join(tmpdir(), 'images-ws-')), 'pictures');
+  const g = harness({ config: { model: 'gpt-image-1', workdir: own } });
+  assert.deepEqual(await g.request('/__dsh_images/workspace', { method: 'POST', body: { title: 'Images' } }), { ok: true, path: own });
+  assert.ok(existsSync(own));
+  // Only a JSON POST changes anything.
+  assert.equal((await g.request('/__dsh_images/workspace')).status, 405);
+});
+
 test('settings normalize', () => {
-  assert.deepEqual(settingsOf(undefined), { enabled: true, provider: '', model: '', baseURL: '', apiKeyEnv: '', size: '1024x1024', quality: '', pricePerImage: 0, currency: 'USD', priceCatalog: '', timeoutMs: 180_000 });
+  assert.deepEqual(settingsOf(undefined), { enabled: true, provider: '', model: '', baseURL: '', apiKeyEnv: '', size: '1024x1024', quality: '', pricePerImage: 0, currency: 'USD', priceCatalog: '', timeoutMs: 180_000, workdir: '' });
   assert.equal(settingsOf({ priceCatalog: false }).priceCatalog, 'off');
   assert.equal(settingsOf({ model: ' x ', timeoutMs: 5 }).model, 'x');
   assert.equal(settingsOf({ timeoutMs: 5 }).timeoutMs, 5);

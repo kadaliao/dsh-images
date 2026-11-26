@@ -133,7 +133,9 @@ GIF, illustration, product, comic) and by origin (built-in, mine, community).
 
 Open one to see its cover, what it needs and where it came from. Fill in its blanks (each shows its
 default), add anything else you want, and press **Start a conversation with it**: a new conversation
-opens with a message naming the recipe in the composer. A recipe that works on your pictures (a photo
+opens in the plugin's own **Images** workspace (not the one you were working in) with a message naming
+the recipe in the composer. The workspace's folder is `~/.dsh/images/workspace`, made and added to the
+sidebar the first time; `workdir` moves it. A recipe that works on your pictures (a photo
 to turn into a figurine, line art to colour) says so; attach them before you send. The model calls
 `generate_image` with the recipe's ref and the blanks, and the tool fills the template itself, so the
 tested wording reaches the image model as written; anything you added goes after it. The picture
@@ -233,6 +235,7 @@ drawer's values take precedence, and clearing a field in the drawer falls back t
 | `priceCatalog` | LiteLLM | The fallback price list: `false` for none, or the URL of another file in LiteLLM's format. |
 | `enabled` | `true` | `false` keeps the gallery but offers no tool to the model; `/images on` and `/images off` flip it at runtime. |
 | `timeoutMs` | `180000` | How long one request may take. |
+| `workdir` | `~/.dsh/images/workspace` | The folder of the Images workspace, where a recipe's conversation starts. |
 
 ```yaml
 - id: images

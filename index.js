@@ -53,6 +53,7 @@ const MODELS_ROUTE = '/__dsh_images/models';
 const CATALOG_ROUTE = '/__dsh_images/catalog';
 const RECIPES_ROUTE = '/__dsh_images/recipes';
 const COVER_ROUTE = '/__dsh_images/recipe-cover';
+const WORKSPACE_ROUTE = '/__dsh_images/workspace';
 
 /** The credential reference the stored API key lives under. */
 export const KEY_REF = 'DSH_IMAGES_API_KEY';
@@ -88,6 +89,8 @@ export function settingsOf(config) {
     // '' for the LiteLLM catalog, 'off' for none, or the URL of a file in its format.
     priceCatalog: c.priceCatalog === false ? 'off' : str(c.priceCatalog),
     timeoutMs: Number.isFinite(timeout) && timeout > 0 ? timeout : DEFAULT_TIMEOUT_MS,
+    // The folder of the Images workspace, where a recipe's conversation starts; '' for the default.
+    workdir: str(c.workdir),
   };
 }
 
@@ -115,6 +118,33 @@ export function mergeSettings(base, saved) {
 /** The DSH home the gallery lives under. */
 function homeDir() {
   return process.env.DSH_HOME && process.env.DSH_HOME !== '' ? process.env.DSH_HOME : join(homedir(), '.dsh');
+}
+
+/** The Images workspace's folder: the configured one (`~/…` expanded), else one under the DSH home. */
+export function workdirOf(settings) {
+  const dir = settings?.workdir ?? '';
+  if (dir === '') return join(homeDir(), 'images', 'workspace');
+  return dir === '~' ? homedir() : dir.startsWith('~/') ? join(homedir(), dir.slice(2)) : resolvePath(dir);
+}
+
+/**
+ * The Images workspace: its folder, made when missing, registered with the Host under `title`
+ * (a title is given only when the Host first registers the folder). Recipes start their
+ * conversations here, not in whatever workspace the person last worked in.
+ * @returns {Promise<{ ok: true, path: string, workspaceId?: string }>}
+ */
+export async function ensureWorkspace(ctx, dir, title) {
+  mkdirSync(dir, { recursive: true });
+  let registry;
+  try {
+    registry = ctx.get?.('workspaceRegistry');
+  } catch {
+    registry = undefined;
+  }
+  // Without the registry the page registers the folder itself, under the folder's name.
+  if (typeof registry?.create !== 'function') return { ok: true, path: dir };
+  const workspace = await registry.create(dir, title);
+  return { ok: true, path: workspace?.path ?? dir, ...(workspace?.id ? { workspaceId: String(workspace.id) } : {}) };
 }
 
 /** The value schema of one saved image, as `read_image` declares it. */
@@ -1119,6 +1149,18 @@ export function apply(ctx, config) {
         kind: 'exact',
         path: DELETE_ROUTE,
         handler: (req, res) => postJson(req, res, (body) => ({ ok: store.remove(String(body.id ?? '')) })),
+      }),
+    );
+    /** POST `{title}`: the Images workspace, made and registered when missing. */
+    scope.effect(() =>
+      webServer.register({
+        kind: 'exact',
+        path: WORKSPACE_ROUTE,
+        handler: (req, res) =>
+          postJson(req, res, (body) => {
+            const title = typeof body.title === 'string' && body.title.trim() !== '' ? body.title.trim().slice(0, 60) : 'Images';
+            return ensureWorkspace(ctx, workdirOf(base), title);
+          }),
       }),
     );
   };
