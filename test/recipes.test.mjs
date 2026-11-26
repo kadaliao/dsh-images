@@ -137,6 +137,7 @@ test('a gallery picture stands for its own recipe, braces and all', () => {
   assert.equal(r.category, 'sticker');
   assert.deepEqual(r.params, { size: '1536x1024', frames: 9, frameMs: 120, quality: 'high' });
   assert.equal(recipeFromImage({ id: 'x', prompt: '日系手帐风格的信息图，奶油白纸背景' }).title.zh, '日系手帐风格的信息图');
+  assert.equal(recipeFromImage({ id: 'y', prompt: 'Create a literary magazine cover about a morning in 杭州. Use…' }).title.en, 'Create a literary magazine cover about');
 });
 
 test('search finds every term, the title first', () => {

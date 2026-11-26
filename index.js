@@ -1275,7 +1275,10 @@ function mountRecipeRoutes(scope, webServer, library, store) {
           if (action === 'save-image') {
             const item = store.get(String(body.id ?? ''));
             if (!item) return fail('no such picture');
-            const recipe = recipeFromImage(item);
+            const own = recipeFromImage(item);
+            // A picture drawn from a recipe keeps that recipe's name, kind and credit; its prompt is the picture's own.
+            const from = item.recipe?.ref && !String(item.recipe.ref).startsWith('image:') ? library.get(item.recipe.ref) : undefined;
+            const recipe = from ? { ...own, title: from.title, summary: from.summary, category: from.category, tags: from.tags, ...(from.source ? { source: from.source } : {}) } : own;
             const title = typeof body.title === 'string' && body.title.trim() !== '' ? body.title : undefined;
             return keep(title ? { ...recipe, id: '', title } : { ...recipe, id: '' }, { file: item.file, mediaType: item.mediaType });
           }

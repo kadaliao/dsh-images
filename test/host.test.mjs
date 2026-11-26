@@ -546,6 +546,12 @@ test('a recipe draws with its template, its own size and the blanks given', asyn
   assert.match(renderResult({}, value)[0].text, /using the recipe "Pixel mosaic" \(builtin:pixel-mosaic\)/);
   const [item] = (await h.request('/__dsh_images/list')).items;
   assert.equal(item.recipe.ref, 'builtin:pixel-mosaic');
+  // Kept as a recipe, it carries the recipe's name, kind and credit, with the picture's own prompt.
+  const kept = await h.request('/__dsh_images/recipes', { method: 'POST', body: { action: 'save-image', id: item.id } });
+  assert.equal(kept.recipe.title.zh, '像素马赛克');
+  assert.equal(kept.recipe.category, 'illustration');
+  assert.equal(kept.recipe.source.repo, 'YouMind-OpenLab/awesome-gpt-image-2');
+  assert.equal(kept.recipe.prompt, item.prompt);
   assert.equal(item.recipe.title.zh, '像素马赛克');
   assert.equal(item.prompt, sent.prompt);
 
