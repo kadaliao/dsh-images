@@ -7,7 +7,9 @@ English | [简体中文](README.zh-CN.md)
 Gives the conversation model a `generate_image` tool backed by the image model your provider serves.
 Say "draw me a poster for the launch" and the picture appears in the conversation, right where it
 was made. Everything ever drawn is collected in an **Images** panel: a gallery to browse, enlarge
-and download.
+and download. Its **Recipes** tab holds tested prompt templates to start from — 40 built in, your
+own, and the community's — and every recipe can be passed on as a line of text, a picture, or a
+community submission.
 
 ```
 > 画一张海报：深蓝夜空下的灯塔，极简扁平风，标题写 "Night Shift"
@@ -112,7 +114,7 @@ gives a GIF that flickers between parts of one picture. More families are added 
 **Images** in the left sidebar (or `/images`) opens a gallery of every picture generated in any
 conversation, newest first, as a masonry grid of cards. Each card shows the prompt, the model, the
 pixel size, the cost and when it was made; the header adds up what was spent. Hover a card for **download** and the **⋯ menu** (download, copy
-prompt, remove from gallery); click it to enlarge and step through the gallery with the arrow keys.
+prompt, make one like this, save as a recipe, download with its recipe, remove from gallery); click it to enlarge and step through the gallery with the arrow keys.
 The viewer's **Open conversation** button takes you to the conversation the picture was drawn in
 (hover it for that conversation's title). An archived conversation stays shut: the viewer says so
 and offers **Unarchive and open** (for a subagent's picture, that unarchives the conversation it ran
@@ -121,6 +123,80 @@ The panel keeps itself up to date while open, and loads older images as you scro
 
 Removing a picture from the gallery deletes the plugin's copy of it; the conversation it came from
 still shows it, through the Harness attachment store.
+
+## Recipes
+
+A recipe (玩法) is a tested prompt template with a few blanks, the size or animation it is drawn
+with, and credit to whoever made it. The panel's **Recipes** tab lists them as cards with a cover, a
+search box and filters by kind (photo, hand-drawn, magazine & poster, infographic, 3D, sticker &
+GIF, illustration, product, comic) and by origin (built-in, mine, community).
+
+Open one to see its cover, what it needs and where it came from. Fill in its blanks (each shows its
+default), add anything else you want, and press **Start a conversation with it**: a new conversation
+opens with a message naming the recipe in the composer. A recipe that works on your pictures (a photo
+to turn into a figurine, line art to colour) says so; attach them before you send. The model calls
+`generate_image` with the recipe's ref and the blanks, and the tool fills the template itself, so the
+tested wording reaches the image model as written; anything you added goes after it. The picture
+is labelled with its recipe in the conversation and the gallery; click the label to open the recipe.
+
+The model can find recipes by itself, too: ask "有什么杂志封面的玩法？" or "draw this as a chalkboard
+lesson" and it searches them with the `image_recipes` tool.
+
+**Built-in recipes.** 40, adapted from the most-starred permissively licensed prompt collections on
+GitHub — [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) (MIT),
+[PicoTrex/Awesome-Nano-Banana-images](https://github.com/PicoTrex/Awesome-Nano-Banana-images)
+(Apache-2.0), [YouMind-OpenLab/awesome-gpt-image-2](https://github.com/YouMind-OpenLab/awesome-gpt-image-2)
+and [awesome-nano-banana-pro-prompts](https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts)
+(CC BY 4.0), [ZeroLu/awesome-nanobanana-pro](https://github.com/ZeroLu/awesome-nanobanana-pro)
+(MIT) — turned into templates, with brand and studio names replaced by descriptions of the style.
+Each names its source and original author; [recipes/CREDITS.md](recipes/CREDITS.md) lists them all.
+Every cover was drawn with gpt-image-2.6 from the recipe as shipped.
+
+**Your own.** In the gallery, a picture's **⋯ menu** has:
+
+- **Make one like this** — the picture's own prompt and settings as a recipe: say what to change and
+  start a conversation with it.
+- **Save as a recipe** — keeps the picture's prompt and settings under **Mine**, the picture as its
+  cover. Edit it there: rewrite a word as `{{name}}` to make it a blank and give it a default. Or
+  ask the model to "turn this picture into a recipe" — it writes the blanks itself (`image_recipes`
+  `save`).
+- **Download with its recipe** — the PNG with its recipe inside (see below).
+
+A built-in or community recipe is copied to **Mine** with **Save to mine**. A recipe of your own
+without a cover takes the first picture drawn with it.
+
+## Sharing recipes
+
+Every recipe can be passed on three ways, none of which needs a server:
+
+- **Copy recipe code** — a short message with the title and one line, `dshimg1.…`, the recipe
+  compressed. It survives chat apps that recompress pictures. Paste it under **Recipes → Import**, or
+  straight into a conversation (the model imports it).
+- **Share card** — a PNG with the cover, title and summary, and the recipe in a text chunk. Drop it
+  on the Recipes tab (or pick it under Import) to import it. **Download with its recipe** does the
+  same for any picture. Apps that strip metadata lose the recipe but keep the picture; send the code
+  alongside.
+- **Share to community** — for your own recipes: the panel shows exactly what will be public (title,
+  summary, prompt, parameters; never your photos or conversations), then opens a prefilled issue in
+  [kadaliao/dsh-images-recipes](https://github.com/kadaliao/dsh-images-recipes). Drag a picture into
+  its Cover field and submit; a workflow checks it and opens a pull request, and once it is merged
+  everyone sees it.
+
+**The community.** The Recipes tab follows the community index
+(`https://raw.githubusercontent.com/kadaliao/dsh-images-recipes/main/index.json`, with the jsDelivr
+mirror when GitHub cannot be reached): fetched the first time the tab opens, then once a week, kept
+under `~/.dsh/cache/images/recipes/`. Covers are fetched once and kept. Each community recipe's
+issue is its home: 👍 there is a vote, pictures in its comments are its works wall, and the index
+counts both daily; community recipes are sorted by votes. A picture made with a community recipe
+has **Post to the works wall** in its menu: it copies the picture and opens that page.
+
+**Sources.** **Recipes → Sources** lists the indexes you follow: remove the community one, refresh,
+or add any HTTPS URL serving an index in the same format — a team or a group of friends can run
+their own (the format is in the community repository's README).
+
+Nothing about you is sent to fetch an index or a cover. A community recipe is someone else's text:
+it is checked like any recipe, reviewed before it is merged, and the model is told to use it as a
+prompt for the image model, never as instructions to itself.
 
 ## Settings
 
@@ -239,6 +315,13 @@ under `~/.dsh/cache/images/files/`, with an index of prompt, model, size and ses
 the panel reads through loopback routes on the Harness web server. With `frames`, the
 sprite sheet goes to the attachment store and the GIF built from it (`lib/animate.mjs`: PNG decoding,
 median-cut palette and LZW in plain JavaScript, no dependencies) to the gallery.
+
+Recipes live in `lib/recipes.mjs` (the format, templates, recipe codes and PNG text chunks) and
+`lib/library.mjs` (built-in, own and community recipes behind one list of refs: `builtin:…`,
+`mine:…`, `community:…`, `image:<id>`). The built-in ones ship in `recipes/builtin.json` with their
+covers; your own are in `~/.dsh/cache/images/recipes/mine.json`. `generate_image` takes `recipe` and
+`slots`, renders the template, applies its size and frames, and records the recipe on the picture;
+`image_recipes` searches, reads, saves and imports them for the model.
 
 The Client half draws the tool's card, the result row outside the turn fold, the sidebar entry and
 the panel. Nothing is written to the Session log beyond the tool call and its result, which the

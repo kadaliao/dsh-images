@@ -411,8 +411,8 @@ test('the gallery panel lists the newest images first, enlarges one, and removes
   hooks.rewind();
   tree = panel({});
   const menu = findAll(tree, (n) => n.props['data-dsh-images-menu'])[0];
-  assert.deepEqual(collect(menu), ['Download', 'Copy prompt', 'Remove from gallery']);
-  findAll(menu, (n) => n.props.role === 'menuitem')[2].props.onClick();
+  assert.deepEqual(collect(menu), ['Download', 'Copy prompt', 'Make one like this', 'Save as a recipe', 'Download with its recipe', 'Remove from gallery']);
+  findAll(menu, (n) => n.props.role === 'menuitem').at(-1).props.onClick();
   await flush();
   assert.deepEqual(posts, [{ url: '/__dsh_images/delete', body: { id: 'b' } }]);
   hooks.rewind();
@@ -882,4 +882,109 @@ test('the model picker filters loosely, carries the gateway prefix to catalog mo
   drawer = render();
   assert.match(collect(drawer).join(' '), /The LiteLLM price list has gpt-image-2\.6-sunburst: text in \$5, image out \$30 per million tokens/);
   hooks.runCleanups();
+});
+
+test('the Recipes tab lists recipes, filters them, and a recipe starts a conversation with its blanks filled', async () => {
+  const { exports, hooks } = await loadClient();
+  const drafts = [];
+  const { ctx, seen } = fakeContext({ services: { uiWorkspace: { startSession: (workspaceId, options) => drafts.push({ workspaceId, options }) } } });
+  exports.apply(ctx);
+  const panel = seen.slots.find((s) => s.options.name === 'main').component;
+  const stored = new Map([['dsh-images:tab', 'recipes']]);
+  globalThis.localStorage = { getItem: (k) => stored.get(k) ?? null, setItem: (k, v) => stored.set(k, v) };
+  const recipes = [
+    {
+      ref: 'builtin:desk-figurine',
+      origin: 'builtin',
+      id: 'desk-figurine',
+      title: { zh: '桌面手办', en: 'Desk figurine' },
+      summary: { en: 'A photo as a figurine' },
+      category: 'photo',
+      tags: ['figurine'],
+      inputs: [{ name: 'photo', label: { en: 'A photo of a pet' } }],
+      slots: [{ name: 'scene', label: { en: 'Scene' }, default: 'a tidy desk' }],
+      prompt: 'Turn the pet into a figurine on {{scene}}',
+      params: { size: '1024x1536' },
+      source: { repo: 'someone/prompts', url: 'https://github.com/someone/prompts', license: 'MIT', author: '@someone' },
+      coverUrl: '/__dsh_images/recipe-cover/builtin%3Adesk-figurine?v=1',
+      uses: 2,
+    },
+    { ref: 'mine:neon', origin: 'mine', id: 'neon', title: { en: 'Neon sign' }, summary: {}, category: 'illustration', tags: [], inputs: [], slots: [], prompt: 'neon', params: {}, createdAt: 5, uses: 0 },
+    { ref: 'community:riso', origin: 'community', id: 'riso', title: { en: 'Riso poster' }, summary: {}, category: 'editorial', tags: [], inputs: [], slots: [], prompt: 'riso', params: { size: '1024x1536' }, author: 'github:ana', issue: 3, repo: 'kadaliao/dsh-images-recipes', stats: { votes: 4, works: 1 }, uses: 0 },
+  ];
+  const posts = [];
+  globalThis.fetch = async (url, init) => {
+    if (init?.method === 'POST') {
+      const body = JSON.parse(init.body);
+      posts.push({ url: String(url), body });
+      return { ok: true, json: async () => (body.action === 'export' ? { ok: true, code: 'dshimg1.abc', text: 'share text dshimg1.abc' } : { ok: true }) };
+    }
+    if (String(url).startsWith('/__dsh_images/recipes')) {
+      return { ok: true, json: async () => ({ ok: true, sources: [{ key: 'builtin', kind: 'builtin', count: 1 }, { key: 'mine', kind: 'mine', count: 1 }, { key: 'community', kind: 'remote', default: true, count: 1 }], recipes }) };
+    }
+    return { ok: true, json: async () => ({ items: [], hasMore: false, total: 0 }) };
+  };
+  try {
+    hooks.reset();
+    let tree = panel({});
+    await flush();
+    await flush();
+    hooks.rewind();
+    tree = panel({});
+    const tab = findAll(tree, (n) => n.props['data-dsh-images-tab'] === 'recipes')[0];
+    assert.equal(tab.props['aria-selected'], true);
+    let cards = findAll(tree, (n) => n.props['data-dsh-images-recipe']);
+    // The user's own first, then the built-in ones, then the community's.
+    assert.deepEqual(cards.map((c) => c.props['data-dsh-images-recipe']), ['mine:neon', 'builtin:desk-figurine', 'community:riso']);
+    const text = collect(tree).join(' ');
+    assert.match(text, /3 recipes/);
+    assert.match(text, /Photo/);
+    assert.match(text, /used 2×/);
+    assert.match(text, /4 👍/);
+
+    // Only the community's.
+    findAll(tree, (n) => n.props['data-dsh-images-origin'] === 'remote')[0].props.onClick();
+    hooks.rewind();
+    tree = panel({});
+    cards = findAll(tree, (n) => n.props['data-dsh-images-recipe']);
+    assert.deepEqual(cards.map((c) => c.props['data-dsh-images-recipe']), ['community:riso']);
+    findAll(tree, (n) => n.props['data-dsh-images-origin'] === 'all')[0].props.onClick();
+    hooks.rewind();
+    tree = panel({});
+
+    // Open the figurine, fill its blank and start.
+    findAll(tree, (n) => n.props['data-dsh-images-recipe'] === 'builtin:desk-figurine')[0].props.onClick();
+    hooks.rewind();
+    tree = panel({});
+    const sheetText = collect(tree).join(' ');
+    assert.match(sheetText, /Works on 1 picture\(s\) of yours/);
+    assert.match(sheetText, /From +someone\/prompts +· @someone +· MIT/);
+    findAll(tree, (n) => n.props['data-dsh-images-slot'] === 'scene')[0].props.onChange({ target: { value: 'a bookshelf' } });
+    hooks.rewind();
+    tree = panel({});
+    findAll(tree, (n) => n.props['data-dsh-images-extra'])[0].props.onChange({ target: { value: 'glossy paint' } });
+    hooks.rewind();
+    tree = panel({});
+    findAll(tree, (n) => n.props['data-dsh-images-start'])[0].props.onClick();
+    assert.equal(drafts.length, 1);
+    assert.equal(drafts[0].options.whenDraftExists, 'replace');
+    assert.equal(drafts[0].options.prompt, 'Draw a picture with the "Desk figurine" recipe (recipe: builtin:desk-figurine).\nScene: a bookshelf\nAlso: glossy paint\nAttached: A photo of a pet.');
+    hooks.rewind();
+    tree = panel({});
+    assert.match(collect(tree).join(' '), /attach the picture\(s\) in the composer/);
+    assert.equal(findAll(tree, (n) => n.props['data-dsh-images-start']).length, 0, 'the sheet closed');
+
+    // The community recipe: its works wall, and a recipe code to copy.
+    findAll(tree, (n) => n.props['data-dsh-images-recipe'] === 'community:riso')[0].props.onClick();
+    hooks.rewind();
+    tree = panel({});
+    assert.match(collect(tree).join(' '), /Works wall \(1\)/);
+    assert.equal(findAll(tree, (n) => n.props['data-dsh-images-share']).length, 0, 'only your own recipes are shared to the community');
+    findAll(tree, (n) => n.props['data-dsh-images-copy-code'])[0].props.onClick();
+    await flush();
+    await flush();
+    assert.deepEqual(posts.at(-1), { url: '/__dsh_images/recipes', body: { action: 'export', ref: 'community:riso', lang: 'en' } });
+  } finally {
+    delete globalThis.localStorage;
+  }
 });

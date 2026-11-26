@@ -1,0 +1,2142 @@
+{
+  "format": 1,
+  "recipes": [
+    {
+      "id": "desk-figurine",
+      "title": {
+        "zh": "桌面手办",
+        "en": "Desk figurine"
+      },
+      "summary": {
+        "zh": "把照片里的角色做成手办，配包装盒和正在建模的电脑",
+        "en": "Turns the character in a photo into a figure on a round base, with its printed box and a screen showing the 3D model"
+      },
+      "category": "photo",
+      "tags": [
+        "figurine",
+        "toy",
+        "collectible",
+        "3d"
+      ],
+      "inputs": [
+        {
+          "name": "photo",
+          "label": {
+            "zh": "人物、宠物或角色图片",
+            "en": "A photo or drawing of a person, pet or character"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "scene",
+          "label": {
+            "zh": "摆放场景",
+            "en": "Where it is set"
+          },
+          "default": "indoors, on a tidy computer desk by a window"
+        }
+      ],
+      "prompt": "turn this photo into a character figure. Behind it, place a box with the character's image printed on it, and a computer showing the 3D modeling process of the figure on its screen. In front of the box, add a round plastic base with the character figure standing on it. set the scene {{scene}}",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#case-1-illustration-to-figure-by-zho_zho_zho",
+        "license": "Apache-2.0",
+        "author": "@ZHO_ZHO_ZHO"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "sketchnote-explainer",
+      "title": {
+        "zh": "手绘图解",
+        "en": "Sketchnote explainer"
+      },
+      "summary": {
+        "zh": "奶油纸底、马卡龙色块的一页手绘知识图解",
+        "en": "A one-page hand-drawn explainer: wobbly black ink and pastel boxes on cream paper"
+      },
+      "category": "handdrawn",
+      "tags": [
+        "sketchnote",
+        "hand-drawn",
+        "pastel",
+        "explainer"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "topic",
+          "label": {
+            "zh": "要讲清楚的主题",
+            "en": "Topic to explain"
+          },
+          "default": "番茄工作法：25 分钟专注的秘密"
+        },
+        {
+          "name": "language",
+          "label": {
+            "zh": "图中文字语言",
+            "en": "Language of the text"
+          },
+          "default": "Simplified Chinese (简体中文)"
+        }
+      ],
+      "prompt": "{{topic}} - Data Visualization\n\nSingle-page hand-drawn educational infographic in a clean presentation style.\nWarm cream paper background, black hand-drawn lines with slight wobble, soft\npastel color blocks. Feels simple, friendly, and easy to understand at a glance.\nDiagram-style visuals ONLY — no realistic or photographic images.\n\nCONTENT: Write the real content for the topic \"{{topic}}\" yourself — a short title,\n2–6 key ideas (each reduced to one short keyword or phrase) and one takeaway sentence.\nAll text in {{language}}.\n\nPALETTE: macaron — soft pastel blocks on warm cream\nCOLORS: Warm Cream background (#F5F0E8); Black (#1A1A1A) for ALL lines, text,\n        arrows, and doodles; section fills in Light Blue (#A8D8EA), Mint Green\n        (#B5E5CF), Lavender (#D5C6E0), Peach (#FFD5C2); Coral Red (#E8655A)\n        sparingly for one or two emphasis points only.\n\nLAYOUT (top → bottom):\n- TOP: Bold hand-lettered title, oversized, slightly wobbly, with an optional\n       decorative underline or small doodle.\n- MIDDLE: 2–6 rounded-rectangle info boxes arranged in a clean grid, row, or\n          radial pattern. Each box = one section, one pastel fill color, one\n          simple icon or sketchy cartoon element, one short keyword/phrase.\n          Hand-drawn arrows connect related zones.\n- BOTTOM: One short hand-lettered takeaway sentence summarizing the main idea.\n\nELEMENTS: Rounded info boxes with clear sectioning, wavy/straight hand-drawn\n          arrows with small inline labels, simple icons and sketchy cartoon\n          elements (stick figures, tools, objects), small doodle decorations\n          (stars, sparkles, underlines, dots, asterisks) used sparingly.\n\nSTYLE: Minimal, well-organized, airy. Color fills don't completely fill\n       outlines (slight \"hand-painted\" overshoot). ALL text hand-lettered —\n       no computer fonts. Short labels and keywords only, never long\n       paragraphs. Generous white space between sections.\n\nClean composition with generous white space. Simple or no background. Main elements centered or positioned by content needs.\nColor values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.\nHuman figures: simplified stylized silhouettes or symbolic representations, not photorealistic.\nText should be large and prominent with handwritten-style fonts. Keep minimal, focus on keywords.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-article-illustrator/references/prompt-construction.md#infographic",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "screenprint-poster-cover",
+      "title": {
+        "zh": "丝网印海报封面",
+        "en": "Screen-print cover"
+      },
+      "summary": {
+        "zh": "双色丝网印海报风的文章封面，用一个象征图形点题",
+        "en": "A duotone screen-print poster cover that sums up an article in one symbol"
+      },
+      "category": "editorial",
+      "tags": [
+        "cover",
+        "poster",
+        "screenprint",
+        "duotone"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "title",
+          "label": {
+            "zh": "封面标题（原样写上）",
+            "en": "Cover title (rendered exactly)"
+          },
+          "default": "慢下来，才是最快的路"
+        },
+        {
+          "name": "summary",
+          "label": {
+            "zh": "文章讲什么（一两句）",
+            "en": "What the article is about"
+          },
+          "default": "一篇关于长期主义、复利与耐心的随笔：真正的进步往往来自日复一日的小积累。"
+        }
+      ],
+      "prompt": "Create a cover image following these guidelines:\n\n## Image Specifications\n\n- **Type**: Cover image / Hero image\n- **Orientation**: Landscape\n\n## Core Principles\n\n- If content involves sensitive or copyrighted figures, create stylistically similar alternatives\n- Ample whitespace, highlight core message, avoid cluttered layouts\n- Main visual elements centered or slightly left (leave right side for title area)\n- Simplified silhouettes for any characters — NO realistic human faces or bodies\n- Icon-based vocabulary: use simple, recognizable icons to represent concepts\n\n# Content Context\nArticle title: {{title}}\nContent summary: {{summary}}\n\n# Visual Design\nType: metaphor — concrete object/scene representing the abstract idea, symbolic elements, emotional resonance\nPalette: duotone\nRendering: screen-print\nFont: display\nText level: title-only — single headline, 85% visual area\nMood: bold — high contrast, vivid saturated colors, heavy visual weight, dynamic energy\n\n# Text Elements\nTitle: \"{{title}}\" — use this exact title, do NOT invent or modify it. Large, eye-catching, faithful to source, in the same language as the title.\n\n# Font Application\nUse bold decorative display typography. Heavy, expressive headlines. Typography integrated into the composition as a design element, not overlaid.\n\n# Composition\n- Main visual: one iconic symbolic object or silhouette derived from the article's meaning — conceptual, not literal\n- Layout: geometric framing (circle, arch or triangle) around the focal symbol, 40-60% negative space, title area on the right\n- Figure-ground inversion where possible (negative space forms a secondary image)\n\n# Palette: duotone (dramatic, cinematic, two-color high contrast)\nChoose ONE duotone pair based on the content mood; the two colors dominate the entire image:\n- Orange + Teal (#E8751A / #0A6E6E) — cinematic, action\n- Red + Cream (#C0392B / #F5E6D0) — bold, classic\n- Blue + Gold (#1A3A5C / #D4A843) — prestigious, premium\n- Purple + Green (#6B3FA0 / #2ECC71) — futuristic, contrast\n- Magenta + Cyan (#C2185B / #00BCD4) — vibrant, pop\n- Crimson + Navy (#DC143C / #0D1B2A) — dramatic, noir\nBackground off-black (#121212) or dark charcoal (#1E1E1E); warm cream (#F5E6D0) or amber (#F4A623) only for small highlights.\nDecorative hints: stark two-color separation across the entire composition; halftone transitions between the two colors; silhouettes in one color against the other; high contrast figure-ground relationships.\nColor values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.\n\n# Rendering: screen-print\nBold, limited-color poster art with print texture — screen print / silkscreen aesthetic with flat color blocks, halftone textures, and deliberate print imperfections, like vintage concert prints and alternative movie poster art.\n- Lines: clean, sharp edges between color blocks; no outlines — shapes defined by color boundaries; stencil-cut quality, bold silhouettes; geometric shapes with precise registration\n- Texture: halftone dot patterns within color fills; slight color layer misregistration (offset between print layers); paper grain texture beneath colors; risograph / screen print imperfections (ink spread, dot gain)\n- Depth: flat color planes layered front to back; depth through silhouette overlap and color layering; no gradients — tonal variation via halftone density; negative space as active compositional element\n- Elements: bold silhouettes and symbolic shapes; limited icon vocabulary of key props and symbolic objects; vintage poster border treatments\n- Typography: bold condensed sans-serif or hand-drawn lettering, Art Deco influences, vintage poster typography, strong readability through high contrast with background",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-cover-image/references/renderings/screen-print.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "line-art-knowledge-card",
+      "title": {
+        "zh": "极简知识卡",
+        "en": "Line-art knowledge card"
+      },
+      "summary": {
+        "zh": "白底极简手绘线条的小红书干货知识卡",
+        "en": "A minimalist hand-drawn line-art knowledge card for Xiaohongshu-style posts"
+      },
+      "category": "infographic",
+      "tags": [
+        "knowledge",
+        "card",
+        "xiaohongshu",
+        "minimal",
+        "line-art"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "topic",
+          "label": {
+            "zh": "知识卡主题",
+            "en": "Card topic"
+          },
+          "default": "向 AI 提问的 6 个技巧"
+        }
+      ],
+      "prompt": "Create a Xiaohongshu (Little Red Book) style infographic following these guidelines:\n\n## Image Specifications\n\n- **Type**: Infographic\n- **Orientation**: Portrait (vertical)\n- **Style**: Hand-drawn illustration\n\n## Core Principles\n\n- Hand-drawn quality throughout - NO realistic or photographic elements\n- If content involves sensitive or copyrighted figures, create stylistically similar alternatives\n- Keep information concise, highlight keywords and core concepts\n- Use ample whitespace for easy visual scanning\n- Maintain clear visual hierarchy\n\n## Text Style (CRITICAL)\n\n- **ALL text MUST be hand-drawn style**\n- Main titles should be prominent and eye-catching\n- Key text should be bold and enlarged\n- Use highlighter effects to emphasize keywords\n- **DO NOT use realistic or computer-generated fonts**\n\n## Language\n\n- Use the same language as the topic below\n- Match punctuation style to the content language (Chinese: “”，。！)\n\n---\n\n## Style: Minimalist hand-drawn line art, intellectual aesthetic\n\n**Color Palette**:\n- Primary: Black (#1A1A1A), dark gray (#4A4A4A)\n- Background: Pure white (#FFFFFF), off-white (#FAFAFA)\n- Accents: Pastel blue (#A8D4F0), pastel yellow (#F9E79F), pastel pink (#FADBD8)\n\n**Visual Elements**:\n- Simple line doodles, hand-drawn wobble effect\n- Geometric shapes, stick figures\n- Maximum whitespace, single-weight ink lines\n- Clean, uncluttered compositions\n\n**Typography**:\n- Clean hand-drawn lettering\n- Simple sans-serif labels\n- Minimal decoration on text\n\nColor values and names are rendering guidance only — do not write them in the image.\n\n---\n\n## Layout: Dense\n\n**Information Density**: High (5-8 key points)\n**Whitespace**: 20-30% of canvas\n\n**Structure**:\n- Multiple sections, structured grid\n- More text, compact but organized\n- Title + multiple sections with headers + numerous points\n\n**Visual Balance**:\n- Organized grid structure\n- Clear section boundaries\n- Compact but readable spacing\n\n---\n\n## Content\n\n**Position**: Content card\n**Core Message**: {{topic}}\n\n**Text Content**: Write the real content for this topic yourself —\n- Title: a short, punchy title\n- Subtitle: one line\n- Points: 5-8 key points, each a short keyword heading plus one concise line of explanation\n\n**Visual Concept**:\nA small line doodle or icon beside each point, pastel highlighter blocks behind the keywords, curvy hand-drawn arrows linking related sections.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-xhs-images/references/workflows/prompt-assembly.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "isometric-cube-room",
+      "title": {
+        "zh": "等距微缩房间",
+        "en": "Isometric mini room"
+      },
+      "summary": {
+        "zh": "装在立方体里的3D等距微缩房间，里面有个Q版手办小人",
+        "en": "A 3D isometric miniature room cut as a cube, with a chibi figure inside"
+      },
+      "category": "3d",
+      "tags": [
+        "isometric",
+        "miniature",
+        "room",
+        "diorama"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "room",
+          "label": {
+            "zh": "房间描述",
+            "en": "The room"
+          },
+          "default": "温馨的插画工作室：木质书桌上放着显示器和数位板，墙上贴满草图和便利贴，书架上摆着画册和小盆栽，坐垫上睡着一只橘猫"
+        },
+        {
+          "name": "character",
+          "label": {
+            "zh": "人物、动作和表情",
+            "en": "Figure, action and expression"
+          },
+          "default": "一位戴圆框眼镜、扎低马尾的年轻插画师，坐在椅子上用数位板画画，表情专注又开心"
+        },
+        {
+          "name": "lighting",
+          "label": {
+            "zh": "光照氛围",
+            "en": "Lighting"
+          },
+          "default": "午后暖阳：窗外斜射进来的金色阳光，加一盏暖黄色台灯"
+        }
+      ],
+      "prompt": "一个等距3D立方体微缩房间（浅切面真立方体；所有物品均严格包含在立方体内）。房间描述：{{room}}。\n人物：Q版/手办风格——{{character}}。人物材质看起来像是哑光PVC，头部较大，身体较小。光照：{{lighting}}；逼真的反射和彩色阴影。视角：略微抬高的等距四分之三视角，立方体正面边缘居中；没有任何元素突出于立方体之外。照片级材质，细节丰富；中性背景。画面细节丰富，构图清晰；无水印。",
+      "params": {
+        "size": "1024x1024"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README.md#%E4%BE%8B-47-3d-%E5%BE%AE%E7%BC%A9%E7%AD%89%E8%B7%9D%E6%88%BF%E9%97%B4%E6%A8%A1%E5%9E%8Bby-arminn_ai",
+        "license": "Apache-2.0",
+        "author": "@Arminn_Ai"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "character-emoji-set",
+      "title": {
+        "zh": "角色表情包",
+        "en": "Emoji sticker set"
+      },
+      "summary": {
+        "zh": "用同一个角色做一整套不同动作的表情贴纸",
+        "en": "A full set of emoji stickers of one character in different poses"
+      },
+      "category": "sticker",
+      "tags": [
+        "emoji",
+        "sticker",
+        "character",
+        "set"
+      ],
+      "inputs": [
+        {
+          "name": "character",
+          "label": {
+            "zh": "角色、宠物或人物图片",
+            "en": "A picture of the character, pet or person"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "count",
+          "label": {
+            "zh": "数量",
+            "en": "How many"
+          },
+          "default": "9"
+        },
+        {
+          "name": "poses",
+          "label": {
+            "zh": "动作和表情",
+            "en": "Poses"
+          },
+          "default": "waving hello, laughing, crying, angry, thumbs up, sleepy, shocked, heart hands and thinking"
+        },
+        {
+          "name": "style",
+          "label": {
+            "zh": "贴纸风格",
+            "en": "Sticker style"
+          },
+          "default": "cute cartoon style, each sticker with a thick white outline, evenly arranged on a plain white background"
+        }
+      ],
+      "prompt": "Using the character from the input image, generate {{count}} emoji stickers based on various poses: {{poses}}. Style: {{style}}.",
+      "params": {
+        "size": "1024x1024"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#example-77-custom-character-emoji-pack-generation-by-vista8",
+        "license": "Apache-2.0",
+        "author": "@vista8"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "ukiyo-e-modern-scene",
+      "title": {
+        "zh": "浮世绘现代街景",
+        "en": "Ukiyo-e modern scene"
+      },
+      "summary": {
+        "zh": "把现代场景画成江户浮世绘木版画，手机变卷轴、高楼变宝塔",
+        "en": "A modern scene reimagined as an Edo-period woodblock print: phones become scrolls, towers become pagodas"
+      },
+      "category": "illustration",
+      "tags": [
+        "ukiyo-e",
+        "woodblock",
+        "japanese",
+        "print"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "scene",
+          "label": {
+            "zh": "现代场景",
+            "en": "Modern scene"
+          },
+          "default": "a busy Shibuya scramble crossing"
+        }
+      ],
+      "prompt": "A Japanese Edo-period Ukiyo-e woodblock print. The overall feeling is a surreal collaboration between masters like Hokusai and Hiroshige, reimagining modern technology through an ancient lens.\n\n**The scene:** {{scene}}\n\n**Edo transformation logic:**\nCharacters wear Edo-era kimono but perform modern actions. All technology is transformed into surreal Edo equivalents:\n* Smartphones are glowing, illustrated paper scrolls being read intently.\n* Metro stations and trains are giant articulated wooden centipede carriages shuffling through crowds.\n* Skyscrapers are reimagined as endless, towering wooden pagodas reaching into dramatic clouds.\n* Robots and mecha appear as giant, armored woodblock golems.\n\nThe composition uses a flattened perspective with large, bold, hand-carved ink outlines. The background features heavily stylized Ukiyo-e wave patterns and dramatic, swirling clouds, with a distant Mt. Fuji visible on the horizon.\n\nThe image must look like a physical print, not a digital painting.\n* Texture: strong visible wood grain texture and rough paper fibers throughout the piece.\n* Printing imperfections: pigment bleeding is evident. Simulate hand-pressed plates with slight color misalignment for authenticity.\n* Color palette: strictly limited to traditional mineral pigments, with dominant use of Prussian blue, vermilion red, and muted yellow ochre.\n* Lighting: soft, flat, shadow-free lighting with no digital gradients.\n\nThe format is a vertical poster. Include vertical Japanese calligraphy describing the scene and a traditional red artist seal stamp in a corner.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-nano-banana-pro-prompts",
+        "url": "https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts/blob/d918710e4bd185ebdf94cda55d450ba8bb86a948/README.md#no-9-edo-period-ukiyo-e-reinterpretation-of-a-modern-scene",
+        "license": "CC-BY-4.0",
+        "author": "VoxcatAI (@VoxcatAI)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "exploded-view-poster",
+      "title": {
+        "zh": "产品爆炸图海报",
+        "en": "Exploded-view poster"
+      },
+      "summary": {
+        "zh": "产品逐层拆开悬浮、两侧配部件标注的科技感爆炸图海报",
+        "en": "A high-tech product poster: the product's layers floating apart with component callouts"
+      },
+      "category": "product",
+      "tags": [
+        "product",
+        "exploded",
+        "poster",
+        "3d"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "product",
+          "label": {
+            "zh": "产品",
+            "en": "Product"
+          },
+          "default": "VR headset"
+        },
+        {
+          "name": "background",
+          "label": {
+            "zh": "背景",
+            "en": "Background"
+          },
+          "default": "soft purple and blue gradient"
+        },
+        {
+          "name": "name",
+          "label": {
+            "zh": "产品名",
+            "en": "Product name"
+          },
+          "default": "NOVA VISION"
+        }
+      ],
+      "prompt": "{\n  \"type\": \"exploded view product diagram poster\",\n  \"subject\": \"{{product}}\",\n  \"style\": \"clean high-tech 3D render, studio lighting, glowing accents\",\n  \"background\": \"{{background}}\",\n  \"header\": {\n    \"logo\": \"{{name}}\",\n    \"subtitle\": \"a short catchphrase: an entirely new experience, built from an entirely new structure\"\n  },\n  \"layout\": {\n    \"centerpiece\": \"vertically stacked exploded view of the {{product}} showing 9 distinct layers of its real internal components, from the outer shell and sensors through the main board with chip, core modules, internal frame and battery to the outermost straps, cushions or casing.\",\n    \"callout_labels\": {\n      \"count\": 8,\n      \"left_side\": \"3 labels, each naming one component in bold with one short line about the benefit it brings\",\n      \"right_side\": \"5 labels, each naming one component in bold with one short line about the benefit it brings\"\n    },\n    \"footer\": {\n      \"left_text_block\": {\n        \"headline\": \"a short headline saying the experience evolves from its structure\",\n        \"body\": \"two sentences on the cutting-edge technology and careful design inside every part of {{name}}\"\n      },\n      \"right_logo\": \"{{name}}\"\n    }\n  }\n}",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/7e3bb45e6cad13b9d5fde5a944c320fc2a3afccb/README.md#no-1-vr-headset-exploded-view-poster",
+        "license": "CC-BY-4.0",
+        "author": "wory＠ホッピング中 (@wory37303852)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "four-panel-allegory",
+      "title": {
+        "zh": "四格寓言漫画",
+        "en": "Four-panel comic"
+      },
+      "summary": {
+        "zh": "起承转合的极简四格漫画，用一个小故事讲清一个道理",
+        "en": "A minimalist 2×2 four-panel comic that explains one idea with a twist"
+      },
+      "category": "comic",
+      "tags": [
+        "comic",
+        "four-panel",
+        "minimal",
+        "allegory"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "topic",
+          "label": {
+            "zh": "要讲的道理/概念",
+            "en": "The idea or lesson"
+          },
+          "default": "沉没成本：已经花掉的钱，不该决定你下一步怎么走"
+        },
+        {
+          "name": "language",
+          "label": {
+            "zh": "图中文字语言",
+            "en": "Language of the text"
+          },
+          "default": "Simplified Chinese (简体中文)"
+        }
+      ],
+      "prompt": "A minimalist, clean line art digital comic strip in a four-panel grid layout (2×2). The style is simplified cartoon illustration with clear black outlines and a minimal color palette of black, white, and spot orange (#FF6B35) for key concepts.\n\nStory: invent a short business-allegory story that explains this idea: {{topic}}. All dialogue, labels and the title in {{language}}.\n\n## 起承转合 Narrative Structure (CRITICAL)\n\n- Panel 1 — Top Left (起 Setup): introduce the situation. Show character(s) in a recognizable context. Establish the \"normal\" state or problem.\n- Panel 2 — Top Right (承 Development): build on the setup. Add complication, show an attempt, or introduce the concept. Stakes become clearer.\n- Panel 3 — Bottom Left (转 Turn): the twist or key insight. Most important panel. Show the unexpected reversal, contrast, or \"aha\" moment that makes the allegory work.\n- Panel 4 — Bottom Right (合 Conclusion): resolution and takeaway. Show the result, consequence, or lesson learned. Can be a visual punchline or summary.\n\nExactly 4 panels in a strict 2×2 equal grid, reading in a Z-pattern; consistent white gutters; clean black panel borders. No 5th panel, no title panel, no footer panel. A brief descriptive title above the 4 panels and an optional one-line moral below them, as part of the page composition.\n\n## Art Style: minimalist\n\n- Clean, uniform black lines; no hatching, cross-hatching, or shading; every line serves a purpose\n- Bold outlines for characters, thinner lines for props/labels\n- Highly simplified, stick-figure-like characters: circle or oval heads, dot eyes, simple line mouth, 4-5 head height proportions; expressive through posture and gesture\n- Distinguish characters only through simple props: ties, glasses, hats, briefcases, aprons; maximum 2-3 characters; generic archetypes (the manager, the employee, the customer)\n- Backgrounds mostly blank white — negative space is a design element; minimal environmental cues (a line for ground, simple desk outline); concept labels and icons instead of detailed environments\n- No sound effects, no motion lines, no screen tones, no gradients\n\n## Accent Color System\n\n- 90%+ black-and-white line art\n- Spot orange (#FF6B35) only on the key concept label or object; characters stay black-and-white\n- Panel 3 (转 Turn) has the strongest color emphasis\n- Same accent color across all 4 panels\n\n## Text in Panels\n\n- Keep text minimal — 1-2 short lines per panel maximum\n- Dialogue in simple oval or rectangle speech bubbles with a thin black outline and a tail pointing to the speaker; hand-drawn lettering\n- Key concept terms highlighted with an accent-color background\n- No narrator boxes — dialogue and labels only\n- Chinese text uses full-width punctuation “”，。！\n\nColor values are rendering guidance only — do not write them in the image.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-comic/references/presets/four-panel.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "blind-box-chibi",
+      "title": {
+        "zh": "盲盒Q版公仔",
+        "en": "Blind-box chibi"
+      },
+      "summary": {
+        "zh": "把照片里的人变成光滑塑料质感的Q版盲盒公仔",
+        "en": "Turns the person in a photo into a cute, glossy vinyl blind-box toy"
+      },
+      "category": "photo",
+      "tags": [
+        "chibi",
+        "toy",
+        "avatar",
+        "3d"
+      ],
+      "inputs": [
+        {
+          "name": "photo",
+          "label": {
+            "zh": "人物照片",
+            "en": "A photo of a person"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "features",
+          "label": {
+            "zh": "要保留的特征",
+            "en": "Features to keep"
+          },
+          "default": "hair color, hairstyle and glasses (if any)"
+        },
+        {
+          "name": "background",
+          "label": {
+            "zh": "背景色",
+            "en": "Background color"
+          },
+          "default": "soft blue"
+        }
+      ],
+      "prompt": "Transform the person in the uploaded photo into a cute 3D designer-toy blind box character. Likeness: Keep key features recognizable: {{features}}. Style: polished 3D rendering, occlusion render, cute Q-version, soft studio lighting, pastel colors. Background: A simple, solid matte color background ({{background}}). Detail: The character should have a smooth, plastic toy texture with a slight glossy finish. Facing forward, friendly expression.",
+      "params": {
+        "size": "1024x1024"
+      },
+      "source": {
+        "repo": "ZeroLu/awesome-nanobanana-pro",
+        "url": "https://github.com/ZeroLu/awesome-nanobanana-pro/blob/main/README.md#101-3d-blind-box-style-avatar",
+        "license": "MIT",
+        "author": "@ZeroLu"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "chalkboard-lesson",
+      "title": {
+        "zh": "黑板课堂",
+        "en": "Chalkboard lesson"
+      },
+      "summary": {
+        "zh": "黑板上用彩色粉笔画的便当格知识讲解图",
+        "en": "A colourful chalk-on-blackboard lesson laid out as a bento grid"
+      },
+      "category": "handdrawn",
+      "tags": [
+        "chalkboard",
+        "chalk",
+        "education",
+        "bento"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "language",
+          "label": {
+            "zh": "图中文字语言",
+            "en": "Language of the text"
+          },
+          "default": "Simplified Chinese (简体中文)"
+        },
+        {
+          "name": "topic",
+          "label": {
+            "zh": "这节课讲什么",
+            "en": "What the lesson covers"
+          },
+          "default": "光合作用：植物是怎么“吃饭”的"
+        }
+      ],
+      "prompt": "Create a professional infographic following these specifications:\n\n## Image Specifications\n\n- **Type**: Infographic\n- **Layout**: bento-grid\n- **Style**: chalkboard\n- **Orientation**: Landscape\n- **Language**: {{language}}\n\n## Core Principles\n\n- Follow the layout structure precisely for information architecture\n- Apply style aesthetics consistently throughout\n- If content involves sensitive or copyrighted figures, create stylistically similar alternatives\n- Keep information concise, highlight keywords and core concepts\n- Use ample whitespace for visual clarity\n- Maintain clear visual hierarchy\n\n## Text Requirements\n\n- All text must match the specified style treatment\n- Main titles should be prominent and readable\n- Key concepts should be visually emphasized\n- Labels should be clear and appropriately sized\n- Use the specified language for all text content\n\n## Layout Guidelines\n\nModular grid layout with varied cell sizes, like a bento box.\n\n- Grid of rectangular cells\n- Mixed cell sizes (1x1, 2x1, 1x2, 2x2)\n- No strict symmetry required\n- Hero cell for main point\n- Supporting cells around it\n- Clear cell boundaries, consistent padding/margins, visual hierarchy through size\n- Icons or illustrations per cell\n- Main title at top; cell titles within each cell; brief content per cell\n- Minimal text, maximum visual; summary in a prominent cell\n\n## Style Guidelines\n\nBlack chalkboard background with colorful chalk drawing style.\n\nClassic classroom chalkboard aesthetic with hand-drawn chalk illustrations. Nostalgic educational feel with imperfect, sketchy lines that capture the warmth of traditional teaching. Colorful chalk creates visual hierarchy while maintaining the authentic chalkboard experience.\n\n- Background: Chalkboard Black (#1A1A1A) or Dark Green-Black (#1C2B1C); realistic chalkboard texture with subtle scratches, dust particles, and faint eraser marks\n- Typography: Hand-drawn chalk lettering style with visible chalk texture. Imperfect baseline adds authenticity. White or bright colored chalk for emphasis.\n- Colors: Chalk White (#F5F5F5) for main text and outlines; Chalk Yellow (#FFE566) highlights and emphasis; Chalk Pink (#FF9999) secondary highlights; Chalk Blue (#66B3FF) diagrams and links; Chalk Green (#90EE90) success and nature; Chalk Orange (#FFB366) warnings and energy\n- Visual elements: hand-drawn chalk illustrations with sketchy, imperfect lines; chalk dust effects around text and key elements; doodles (stars, arrows, underlines, circles, checkmarks); mathematical formulas and simple diagrams; eraser smudges and chalk residue textures; wooden frame border optional; stick figures and simple icons; connection lines with hand-drawn feel\n- Do: maintain authentic chalk texture on all elements; use imperfect, hand-drawn quality throughout; add subtle chalk dust and smudge effects; create visual hierarchy with color variety; include playful doodles and annotations\n- Don't: use perfect geometric shapes; create clean digital-looking lines; add photorealistic elements; use gradients or glossy effects\n\nColor values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.\n\n---\n\nGenerate the infographic based on the content below:\n\nTopic: {{topic}}\nWrite the real content for this topic yourself: a main title, one hero cell with the core idea, and 4–6 supporting cells, each with a short cell title, a few words of explanation and a simple chalk drawing or diagram.\n\nText labels (in {{language}}): main title, cell titles, short cell captions, one summary line.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-infographic/references/styles/chalkboard.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "elegant-title-cover",
+      "title": {
+        "zh": "雅致标题封面",
+        "en": "Elegant title cover"
+      },
+      "summary": {
+        "zh": "以大标题为主角、配细腻手绘花饰的雅致文章封面",
+        "en": "A refined, title-led article cover with delicate hand-drawn ornament"
+      },
+      "category": "editorial",
+      "tags": [
+        "cover",
+        "typography",
+        "elegant",
+        "serif"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "title",
+          "label": {
+            "zh": "封面标题（原样写上）",
+            "en": "Cover title (rendered exactly)"
+          },
+          "default": "把话说清楚的艺术"
+        },
+        {
+          "name": "subtitle",
+          "label": {
+            "zh": "副标题",
+            "en": "Subtitle"
+          },
+          "default": "写给每一个想好好表达的人"
+        }
+      ],
+      "prompt": "Create a cover image following these guidelines:\n\n## Image Specifications\n\n- **Type**: Cover image / Hero image\n- **Orientation**: Landscape\n\n## Core Principles\n\n- If content involves sensitive or copyrighted figures, create stylistically similar alternatives\n- Ample whitespace, highlight core message, avoid cluttered layouts\n- Simplified silhouettes for any characters — NO realistic human faces or bodies\n- Icon-based vocabulary: use simple, recognizable icons to represent concepts\n\n# Content Context\nArticle title: {{title}}\nSubtitle: {{subtitle}}\n\n# Visual Design\nType: typography — title as primary element (40%+ area), minimal supporting visuals, strong hierarchy\nPalette: elegant\nRendering: hand-drawn\nFont: serif\nText level: title-subtitle — title + context, 75% visual area\nMood: balanced — medium contrast, normal saturation, balanced visual weight\n\n# Text Elements\nTitle: \"{{title}}\" / Subtitle: \"{{subtitle}}\" — use these exact words, do NOT invent or modify them. Title large and eye-catching; subtitle a clear secondary element. Match punctuation style to the text language.\n\n# Font Application\nUse elegant serif typography with refined letterforms. Classic, editorial character. Structured, proportional spacing. Authoritative, sophisticated feel.\n\n# Composition\n- The title, centered, is the hero; one or two small hand-drawn symbolic icons drawn from the title's meaning support it\n- Generous whitespace (40-60% breathing room); balanced, symmetrical composition\n- Decorative: delicate ornamental details and refined geometric patterns — fine flourishes, laurel sprigs, thin ornamental border\n\n# Palette: elegant (sophisticated, refined, understated luxury)\nSoft Coral (#E8A598), Muted Teal (#5B8A8A), Dusty Rose (#D4A5A5) as primaries; Warm Cream (#F5F0E6) or Soft Beige (#F0EBE0) background; Gold (#C9A962) and Copper (#B87333) accents.\nDecorative hints: delicate ornamental details; subtle gradients and soft transitions; refined geometric patterns; balanced, symmetrical compositions.\nColor values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.\n\n# Rendering: hand-drawn\nSketchy, organic, personal — hand-drawn illustration with visible imperfections, organic line quality, and personal touch, like a skilled artist's sketchbook.\n- Lines: sketchy, organic, slightly imperfect strokes; variable line weight (thicker at pressure points); natural hand tremor visible\n- Texture: paper grain and subtle surface texture; pencil/pen texture on strokes; casual fills with visible brush direction\n- Depth: minimal — light hand-drawn shadows or hatching; no realistic depth or perspective; simple layering with overlap\n- Elements: organic shapes, conceptual icons with sketchy quality, delicate flourishes",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-cover-image/references/palettes/elegant.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "papercraft-bento",
+      "title": {
+        "zh": "纸艺便当格信息图",
+        "en": "Paper-craft bento grid"
+      },
+      "summary": {
+        "zh": "剪纸拼贴质感的便当格信息图，一格讲一个要点",
+        "en": "A bento-grid infographic in layered cut-paper craft, one point per cell"
+      },
+      "category": "infographic",
+      "tags": [
+        "bento",
+        "papercraft",
+        "grid",
+        "explainer"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "language",
+          "label": {
+            "zh": "图中文字语言",
+            "en": "Language of the text"
+          },
+          "default": "Simplified Chinese (简体中文)"
+        },
+        {
+          "name": "topic",
+          "label": {
+            "zh": "信息图主题",
+            "en": "Infographic topic"
+          },
+          "default": "一份均衡早餐的 5 个要素"
+        }
+      ],
+      "prompt": "Create a professional infographic following these specifications:\n\n## Image Specifications\n\n- **Type**: Infographic\n- **Layout**: bento-grid\n- **Style**: craft-handmade (paper-cutout variant)\n- **Orientation**: Landscape\n- **Language**: {{language}}\n\n## Core Principles\n\n- Follow the layout structure precisely for information architecture\n- Apply style aesthetics consistently throughout\n- If content involves sensitive or copyrighted figures, create stylistically similar alternatives\n- Keep information concise, highlight keywords and core concepts\n- Use ample whitespace for visual clarity\n- Maintain clear visual hierarchy\n\n## Text Requirements\n\n- All text must match the specified style treatment\n- Main titles should be prominent and readable\n- Key concepts should be visually emphasized\n- Labels should be clear and appropriately sized\n- Use the specified language for all text content\n\n## Layout Guidelines\n\nModular grid layout with varied cell sizes, like a bento box.\n\n- Grid of rectangular cells\n- Mixed cell sizes (1x1, 2x1, 1x2, 2x2)\n- No strict symmetry required\n- Hero cell for main point\n- Supporting cells around it\n- Clear cell boundaries, varied cell backgrounds, consistent padding/margins\n- Icons or illustrations per cell; visual hierarchy through size\n- Main title at top; cell titles within each cell; brief content per cell\n- Minimal text, maximum visual; summary in a prominent cell\n\n## Style Guidelines\n\nHand-drawn and paper craft aesthetic with warm, organic feel — paper-cutout variant: layered paper craft with drop shadows, torn edges and texture.\n\n- Color palette: warm pastels, soft saturated colors, craft paper tones; background light cream (#FFF8F0) or textured paper (#F5F0E6); bold highlights in construction paper colors\n- Visual elements: cut-paper quality; organic, slightly imperfect shapes; layered depth with shadows; simple cartoon elements and icons; character illustrations (people in cartoon form); ample whitespace, clean composition; keywords and core concepts highlighted\n- **Strictly hand-made look—no realistic or photographic elements**\n- Style enforcement: all imagery must maintain cartoon/illustrated aesthetic; replace real photos or realistic figures with paper-craft equivalents; consistent style throughout\n- Typography: cut-out letter style for titles; clear, readable labels; keywords emphasized with larger/bolder text\n\nColor values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.\n\n---\n\nGenerate the infographic based on the content below:\n\nTopic: {{topic}}\nWrite the real content for this topic yourself: a main title, one large hero cell with the core idea, and 4-6 supporting cells, each with a short cell title, one or two short lines and a paper-cut illustration.\n\nText labels (in {{language}}): main title, cell titles, short cell captions, one summary line.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-infographic/references/styles/craft-handmade.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "brick-minifigure-box",
+      "title": {
+        "zh": "积木小人盒装",
+        "en": "Brick minifigure box"
+      },
+      "summary": {
+        "zh": "把一个角色做成积木小人，连同包装盒和配件等距展示",
+        "en": "Turns a character into a toy-brick minifigure, shown in and beside its isometric box with accessories"
+      },
+      "category": "3d",
+      "tags": [
+        "bricks",
+        "toy",
+        "minifigure",
+        "isometric",
+        "packaging"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "character",
+          "label": {
+            "zh": "角色",
+            "en": "Character"
+          },
+          "default": "a cheerful astronaut gardener with a round white helmet and an orange suit"
+        },
+        {
+          "name": "title",
+          "label": {
+            "zh": "盒子标题",
+            "en": "Box title"
+          },
+          "default": "SPACE GARDEN"
+        },
+        {
+          "name": "items",
+          "label": {
+            "zh": "随身配件",
+            "en": "Accessories"
+          },
+          "default": "a watering can, a potted sprout, a tiny moon rover and a seed packet"
+        }
+      ],
+      "prompt": "Transform {{character}} into a plastic interlocking toy-brick minifigure packaging box style, presented in isometric perspective. Label the box with the title \"{{title}}\". Inside the box, display the toy-brick minifigure based on this character, along with their essential items ({{items}}) as toy-brick accessories. Beside the box, also display the actual minifigure itself, unpackaged, rendered in a realistic and vivid style. The box carries an original toy brand mark of your own design; no existing brand names, logos or trade dress.",
+      "params": {
+        "size": "1024x1024"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#case-45-lego-minifigureby-zho_zho_zho",
+        "license": "Apache-2.0",
+        "author": "@ZHO_ZHO_ZHO"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "crystal-emoji-loop",
+      "title": {
+        "zh": "水晶表情动图",
+        "en": "Crystal emoji loop"
+      },
+      "summary": {
+        "zh": "透明水晶质感的表情符号，轻轻浮动闪光的循环动图",
+        "en": "A clear crystal-glass emoji that floats and glints in a seamless loop"
+      },
+      "category": "sticker",
+      "tags": [
+        "emoji",
+        "crystal",
+        "glass",
+        "animated",
+        "gif"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "emoji",
+          "label": {
+            "zh": "表情符号",
+            "en": "The emoji"
+          },
+          "default": "a smiling face emoji with heart-shaped eyes"
+        },
+        {
+          "name": "motion",
+          "label": {
+            "zh": "动作",
+            "en": "Motion"
+          },
+          "default": "bobs gently up and down and tilts a little from side to side while a bright glint of light sweeps across its rounded edges"
+        }
+      ],
+      "prompt": "A photorealistic, highly detailed image featuring {{emoji}} rendered in clear, highly polished transparent glass or crystal material. The body has distinct thickness and dimensional depth, its shape presented in simplified yet extremely precise geometric structures, making it instantly recognizable without any patterns. All edges are treated with rounded chamfers and smooth curved surfaces, creating elegant refraction effects under light. It floats slightly tilted above a clean, flawless, seamless pale beige or very light gray studio background.\nLighting is bright, clean professional studio light, focusing on highlighting the transparency, specular reflection and refraction characteristics of the glass material. Sharp and delicate highlights appear on the chamfered edges. A soft, diffuse shadow falls below and slightly behind it, giving the picture a sense of groundedness without destroying the minimalist temperament.\nThe overall aesthetic style is minimalist, modern, and clean, presenting the visual effect of high-end product photography.\nMotion: the crystal emoji {{motion}}, in one continuous movement that ends exactly where it began, so it loops seamlessly.",
+      "params": {
+        "size": "1024x1024",
+        "frames": 6
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#example-13-crystal-texture-emoji-by-zho_zho_zho",
+        "license": "Apache-2.0",
+        "author": "@ZHO_ZHO_ZHO"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "risograph-poster",
+      "title": {
+        "zh": "孔版印刷海报",
+        "en": "Risograph poster"
+      },
+      "summary": {
+        "zh": "套色错位、油墨晕染的孔版印刷海报，平铺在木桌上实拍",
+        "en": "A flat-lay photo of a misregistered risograph poster with chunky hand-drawn type on rough paper"
+      },
+      "category": "illustration",
+      "tags": [
+        "risograph",
+        "print",
+        "poster",
+        "texture"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "name",
+          "label": {
+            "zh": "海报宣传的对象",
+            "en": "What it advertises"
+          },
+          "default": "INK & PAPER Print Studio"
+        },
+        {
+          "name": "headline",
+          "label": {
+            "zh": "主标语",
+            "en": "Headline"
+          },
+          "default": "PRINT SOMETHING REAL"
+        }
+      ],
+      "prompt": "A highly detailed, tactile flat-lay photograph of a neo-analog advertisement poster for \"{{name}}.\" The poster embodies an 'imperfect humanism' aesthetic, printed on heavy, rough-textured cream-colored recycled paper with visible fiber grain, lying flat on a worn wooden studio table under soft, natural window light. The composition features a vibrant, slightly misregistered risograph print using limited colors: fluorescent pink, school bus yellow, and electric blue. The artwork consists of bold, abstract, overlapping geometric shapes and forms, showing deliberate ink bleed and slight offset misalignments where colors meet, creating a raw, hands-on feel.\n\nChunky, imperfect hand-drawn typography dominates the layout, reading \"{{headline}}\" in thick, wobbly letterforms using a smudged black riso ink effect. The name \"{{name}}\" is integrated into the freeform, anti-grid composition using smaller, similarly rough, stamped-style text. The overall design has a spontaneous, naïve quality, featuring visible torn paper collage elements and rough rubber stamp texture overlays. The focus is sharp on the deeply tactile, slightly grainy surface of the paper and the imperfect application of the vibrant, transparent inks. No brand names or logos of real companies, printers or machines anywhere in the picture.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-nano-banana-pro-prompts",
+        "url": "https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts/blob/ef11557a875b5316c0562298cc3ff231307c379e/README.md#no-95-product-marketing---tactile-risograph-studio-poster",
+        "license": "CC-BY-4.0",
+        "author": "Ashish Sheth (@commanderdgr8)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "luxury-product-still-life",
+      "title": {
+        "zh": "高级感产品静物",
+        "en": "Luxury still life"
+      },
+      "summary": {
+        "zh": "把产品照片升级成大片留白、精控光影的奢侈品广告静物",
+        "en": "Turns a product photo into a quiet luxury-ad still life with clean negative space and precise light"
+      },
+      "category": "product",
+      "tags": [
+        "product",
+        "luxury",
+        "studio",
+        "minimal"
+      ],
+      "inputs": [
+        {
+          "name": "product",
+          "label": {
+            "zh": "产品照片",
+            "en": "A photo of the product"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "background",
+          "label": {
+            "zh": "背景色",
+            "en": "Background"
+          },
+          "default": "soft off-white, cool gray, or light beige"
+        },
+        {
+          "name": "supports",
+          "label": {
+            "zh": "托台",
+            "en": "Supports"
+          },
+          "default": "a plain white cube, a cylinder, or a thin transparent panel"
+        }
+      ],
+      "prompt": "Using the product in the input image as the base, generate a minimalist, high-quality commercial still life photograph with the aesthetic of a luxury brand advertisement.\n\nPreserve the general shape, proportions, and main color scheme of the core product in the reference so that it is instantly recognizable as the same product, but upgrade the overall texture and atmosphere of the image, making it look like an ad for a top-tier international fragrance, skincare item, or high-end electronic product.\n\nUse a vertical composition. The background should be a large area of clean, neutral negative space, such as {{background}}, creating a quiet, restrained, and expensive studio environment. Apart from the core product and a minimal number of necessary supports, do not add any extra decorations. No clutter, no elaborate scene setup—only keep very simple geometric supports (such as {{supports}}). The supports must be simple and low-profile, existing only to hold and accentuate the product.\n\nStrongly emphasize the material details of the product, and let the lighting fully serve those materials:\nShow frosted glass with a fine, soft matte texture, ceramics with a matte or slightly glazed feel, and polished metal with clean, sharp specular highlights. Liquids should have clearly visible viscosity and volume. Avoid any cheap plastic feel, complex patterns, or gaudy stickers; the overall material quality must feel cool, restrained, and luxurious.\n\nUse professional studio lighting: mainly soft, diffused light from softboxes, plus precise rim light outlining the product’s shape. The contours should be crisp and layered, and the shadows should be soft and clean, with no noise or dirty shadow patches. You may use a near-macro viewpoint, moving in closer to the product to highlight materials and details, while preserving ample negative space around the frame so the product can \"speak for itself\" in the emptiness.\n\nKeep the overall color scheme neutral and calm. The product’s own color can be slightly more saturated, making it the single visual focal point in the scene. Do not use exaggerated gradient backgrounds, flashy colored lighting, or e-commerce promo aesthetics. No large-price text, labels, or cartoon graphics.\n\nThe final result must be a high-resolution commercial key visual that looks ready for a magazine back cover or a high-end brand announcement poster: minimalist, quiet, high-end, with the core product confidently centered, surrounded by clean negative space and precisely controlled lighting.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-nano-banana-pro-prompts",
+        "url": "https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts/blob/eea714f7e6548a8c63d655699316346137952cfb/README.md#no-6-luxury-minimalist-product-photography-based-on-a-reference-image",
+        "license": "CC-BY-4.0",
+        "author": "VoxcatAI (@VoxcatAI)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "id-photo",
+      "title": {
+        "zh": "证件照",
+        "en": "ID photo"
+      },
+      "summary": {
+        "zh": "把生活照裁成正脸微笑、换好正装和底色的证件照",
+        "en": "Crops a portrait into a formal ID photo with a plain background and business attire"
+      },
+      "category": "photo",
+      "tags": [
+        "portrait",
+        "id",
+        "headshot",
+        "formal"
+      ],
+      "inputs": [
+        {
+          "name": "photo",
+          "label": {
+            "zh": "脸部清晰的人像照片",
+            "en": "A photo where the face is clearly visible"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "spec",
+          "label": {
+            "zh": "规格",
+            "en": "Photo size"
+          },
+          "default": "2-inch"
+        },
+        {
+          "name": "background",
+          "label": {
+            "zh": "底色",
+            "en": "Background color"
+          },
+          "default": "Blue"
+        },
+        {
+          "name": "attire",
+          "label": {
+            "zh": "着装",
+            "en": "Clothing"
+          },
+          "default": "Professional business attire"
+        }
+      ],
+      "prompt": "Crop the head and create a {{spec}} ID photo with:\n  1. {{background}} background\n  2. {{attire}}\n  3. Frontal face\n  4. Slight smile",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#case-63-create-an-id-photoby-songguoxiansen",
+        "license": "Apache-2.0",
+        "author": "@songguoxiansen"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "morandi-journal-guide",
+      "title": {
+        "zh": "手账干货大图",
+        "en": "Journal-style guide"
+      },
+      "summary": {
+        "zh": "莫兰迪色手账涂鸦风的高密度选购/避坑大图",
+        "en": "A dense Morandi-toned bullet-journal guide with washi tape and doodles"
+      },
+      "category": "handdrawn",
+      "tags": [
+        "journal",
+        "doodle",
+        "washi",
+        "guide",
+        "xiaohongshu"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "language",
+          "label": {
+            "zh": "图中文字语言",
+            "en": "Language of the text"
+          },
+          "default": "Simplified Chinese (简体中文)"
+        },
+        {
+          "name": "topic",
+          "label": {
+            "zh": "指南主题",
+            "en": "Guide topic"
+          },
+          "default": "新手怎么挑一口好用的炒锅"
+        }
+      ],
+      "prompt": "Create a professional infographic following these specifications:\n\n## Image Specifications\n\n- **Type**: Infographic (高密度信息大图)\n- **Layout**: dense-modules\n- **Style**: morandi-journal\n- **Orientation**: Portrait (vertical)\n- **Language**: {{language}}\n\n## Core Principles\n\n- Follow the layout structure precisely for information architecture\n- Apply style aesthetics consistently throughout\n- If content involves sensitive or copyrighted figures, create stylistically similar alternatives\n- Keep information concise, highlight keywords and core concepts\n- Use ample whitespace for visual clarity\n- Maintain clear visual hierarchy\n\n## Text Requirements\n\n- All text must match the specified style treatment\n- Main titles should be prominent and readable\n- Key concepts should be visually emphasized\n- Labels should be clear and appropriately sized\n- Use the specified language for all text content\n\n## Layout Guidelines\n\nHigh-density modular layout with 6-7 typed information modules packed with concrete data.\n\n- 6-7 distinct modules per image, each serving a specific information function\n- Every module contains concrete data: option names, numbers, percentages, parameters\n- Minimal whitespace—compact spacing prioritized over breathing room\n- Smaller text acceptable to maximize information density\n- Each module identified by coordinate label or section marker (e.g., MOD-1, SEC-A)\n\nModule archetypes (pick 6-7 that fit the topic):\n- Selection Array: grid of 4-8 options with icons, names, brief descriptions; highlight \"best choice\"\n- Specification Scale: 3-5 levels with precise numerical increments, quality indicators (faces, checkmarks)\n- Deep Dive/Detail: zoom-in callouts, internal components, cross-section or exploded view\n- Scenario Comparison: 3-6 scenarios with specific recommendations and data per scenario\n- Identification Tips: 3-5 inspection methods in look/test/check/ask format\n- Warning/Pitfall Zone: 3-5 pitfalls with consequences, 1-2 correct approaches; high visual contrast\n- Quick Reference: dense table, one-line summaries, decision flowchart, or key takeaways\n\nText placement: main title at top, prominent and impactful; subtitle with module count (\"X大维度全面解析...\"); module headers inside colored badges or labeled frames; body text compact, multiple columns within modules; numbers highlighted with accent colors, slightly larger than body text.\n\nInformation density rules: every corner should contain useful information or metadata; no decorative-only empty space; each module must have specific data points, not generic descriptions; dense but organized.\n\n## Style Guidelines\n\nHand-drawn doodle illustration with warm Morandi color tones and cozy bullet journal aesthetic.\n\nColor palette:\n- Background: Warm cream/beige with subtle paper texture (#F5F0E6)\n- Primary: Muted teal/sage green (#7BA3A8) for headers and frames\n- Secondary: Warm terracotta/orange (#D4956A) for highlights and numbers\n- Line art: Dark charcoal brown (#4A4540)\n- Soft highlights: Pale yellow (#F5E6C8)\n\nVisual elements:\n- Hand-drawn doodle illustrations with organic, slightly imperfect ink lines\n- Washi tape strip decorations (diagonal stripes pattern, beige and brown)\n- Rounded card containers for option items\n- Hand-drawn rulers, scales, and progress bars with hand-drawn face quality indicators\n- Smiley/frowny faces as quality markers\n- Dotted line frames around sections\n- Connecting arrows and dotted lines between modules\n- Corner decorations: tiny houses, stars, sparkles, clouds\n- Wavy line dividers between sections\n- Callout bubbles for tips\n- Magnifying glass icons for identification tips\n- Thumbs up/down icons (hand-drawn style)\n\nTypography:\n- Main title: Bold hand-lettered calligraphy style with decorative flourishes\n- Module headers: Clean handwritten text in white on dark teal rounded badge (#6B9080)\n- Body text: Neat handwritten print style, easy to read\n- Numbers: Highlighted in terracotta (#D4956A), slightly larger than body\n\nStyle enforcement: all imagery must maintain hand-drawn/doodle aesthetic—no digital precision; organic, slightly imperfect shapes throughout; sketch-like quality with visible line weight variations; warm and cozy journal feel, not clinical or corporate.\n\nAvoid: flat vector icons or emoji; clean geometric shapes; stock illustration style; strict grid layout; pure white background; digital/corporate look.\n\nColor values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.\n\n---\n\nGenerate the infographic based on the content below:\n\nTopic: {{topic}}\nWrite the real, accurate content for this topic yourself: a main title, a subtitle with the module count, and 6-7 modules chosen from the archetypes above, each filled with concrete numbers, parameters and specific recommendations. Name options by type, material or spec rather than by real brand, and draw no logos.\n\nText labels (in {{language}}): title, subtitle, module headers, module body text, numbers and tips.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-infographic/references/styles/morandi-journal.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "fashion-magazine-cover",
+      "title": {
+        "zh": "时尚杂志封面",
+        "en": "Fashion magazine cover"
+      },
+      "summary": {
+        "zh": "影棚人像配衬线刊头和封面标题的写实时尚杂志封面",
+        "en": "A photoreal fashion magazine cover: studio portrait, serif masthead and cover lines"
+      },
+      "category": "editorial",
+      "tags": [
+        "magazine",
+        "cover",
+        "fashion",
+        "typography"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "subject",
+          "label": {
+            "zh": "封面人物",
+            "en": "Cover model"
+          },
+          "default": "a beautiful young Asian woman. She has light brown hair with blonde highlights and a braided crown, soft elegant makeup, and a gentle expression. She is wearing a white ribbed off-the-shoulder top with spaghetti straps and delicate gold drop earrings"
+        },
+        {
+          "name": "magazine",
+          "label": {
+            "zh": "杂志名",
+            "en": "Masthead"
+          },
+          "default": "LUMINA"
+        },
+        {
+          "name": "headline",
+          "label": {
+            "zh": "主标题",
+            "en": "Main cover line"
+          },
+          "default": "STYLE EVOLUTION"
+        }
+      ],
+      "prompt": "A photorealistic fashion magazine cover featuring a portrait of {{subject}}. The background is a soft, textured neutral gray. The layout includes elegant typography: a large masthead at the top reading \"{{magazine}}\" in a classic serif font. On the left side, text reads \"THE NEW ERA OF AI BEAUTY\" above a larger \"{{headline}}\". On the right side, text reads \"FUTURE FASHION\" above \"WHAT'S NEXT?\". At the bottom, text reads \"BEAUTY SECRETS of TOMORROW\" above \"ELEGANT & CHIC\". The overall lighting is soft, professional studio illumination.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/37122fb55eb4bd60cb18a03808ba7cc909b87635/README.md#no-74-product-marketing---photorealistic-fashion-magazine-cover",
+        "license": "CC-BY-4.0",
+        "author": "aichof(アイチョフ) (@aichof21)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "vintage-academia-timeline",
+      "title": {
+        "zh": "复古手稿时间轴",
+        "en": "Vintage science timeline"
+      },
+      "summary": {
+        "zh": "泛黄羊皮纸上的复古科学手稿风时间轴",
+        "en": "A timeline drawn like an old sepia science notebook on parchment"
+      },
+      "category": "infographic",
+      "tags": [
+        "timeline",
+        "history",
+        "vintage",
+        "sepia"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "language",
+          "label": {
+            "zh": "图中文字语言",
+            "en": "Language of the text"
+          },
+          "default": "Simplified Chinese (简体中文)"
+        },
+        {
+          "name": "topic",
+          "label": {
+            "zh": "时间轴主题",
+            "en": "Timeline subject"
+          },
+          "default": "人类计时工具的演变：从日晷到原子钟"
+        }
+      ],
+      "prompt": "Create a professional infographic following these specifications:\n\n## Image Specifications\n\n- **Type**: Infographic\n- **Layout**: linear-progression (timeline variant)\n- **Style**: aged-academia\n- **Orientation**: Landscape\n- **Language**: {{language}}\n\n## Core Principles\n\n- Follow the layout structure precisely for information architecture\n- Apply style aesthetics consistently throughout\n- If content involves sensitive or copyrighted figures, create stylistically similar alternatives\n- Keep information concise, highlight keywords and core concepts\n- Use ample whitespace for visual clarity\n- Maintain clear visual hierarchy\n\n## Text Requirements\n\n- All text must match the specified style treatment\n- Main titles should be prominent and readable\n- Key concepts should be visually emphasized\n- Labels should be clear and appropriately sized\n- Use the specified language for all text content\n\n## Layout Guidelines\n\nSequential progression showing chronological events.\n\n- Linear horizontal arrangement\n- Nodes/markers at key points\n- Connecting line or path between nodes\n- Clear start and end points\n- Directional flow indicators\n- Timeline variant: time markers, period labels\n- Visual elements: date markers, arrows or connectors showing direction, an illustration representing each event, consistent node spacing\n- Text placement: title at top; event titles at each node; brief descriptions below nodes; dates clearly visible\n\n## Style Guidelines\n\nHistorical scientific illustration with aged paper aesthetic.\n\n- Color palette: sepia brown (#704214), aged ink, muted earth tones; parchment background (#F4E4BC) with yellowed paper texture; faded red annotations, iron gall ink spots as accents\n- Visual elements: aged paper texture overlay; detailed cross-hatching and line work; scientific illustration precision; study notes and annotations; specimen plate or sketch aesthetic; numbered diagram elements\n- Typography: handwritten cursive or serif fonts; scientific annotations; small caps for labels; italics for scientific names\n- Illustrate each event with the instrument, invention, object or diagram it is about — no portraits of real people\n\nColor values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.\n\n---\n\nGenerate the infographic based on the content below:\n\nTopic: {{topic}}\nWrite the real, accurate content for this timeline yourself: a title and 5-7 events in chronological order, each with a date or period, a short event title and one line of description.\n\nText labels (in {{language}}): title, dates, event titles, short descriptions.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-infographic/references/styles/aged-academia.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "polymer-clay-mini-shop",
+      "title": {
+        "zh": "黏土微缩小店",
+        "en": "Clay mini shop"
+      },
+      "summary": {
+        "zh": "手工软陶质感的微缩小店，屋顶就是超大号的招牌商品",
+        "en": "A handmade polymer-clay miniature shop whose roof is made of its own giant product"
+      },
+      "category": "3d",
+      "tags": [
+        "clay",
+        "miniature",
+        "diorama",
+        "shop"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "shop_name",
+          "label": {
+            "zh": "店名",
+            "en": "Shop name"
+          },
+          "default": "Peachy Days"
+        },
+        {
+          "name": "product",
+          "label": {
+            "zh": "主打商品",
+            "en": "What it sells"
+          },
+          "default": "peaches"
+        }
+      ],
+      "prompt": "Tiny diorama shop called \"{{shop_name}}\". Roof made of oversized {{product}}, big \"{{shop_name}}\" sign above the window, vendor handing {{product}} to a customer, ground covered with many {{product}}. Hand-made polymer-clay look, studio macro photo, soft light, shallow depth of field, vertical composition",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#example-89-miniature-store-by-nanobanana_labs",
+        "license": "Apache-2.0",
+        "author": "@NanoBanana_labs"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "waving-sticker-loop",
+      "title": {
+        "zh": "挥手贴纸动图",
+        "en": "Waving sticker loop"
+      },
+      "summary": {
+        "zh": "把照片里的角色做成白边贴纸，配一句短语，循环挥手",
+        "en": "Turns the character in a photo into a white-outline sticker with a phrase that waves hello in a loop"
+      },
+      "category": "sticker",
+      "tags": [
+        "sticker",
+        "animated",
+        "gif",
+        "character"
+      ],
+      "inputs": [
+        {
+          "name": "photo",
+          "label": {
+            "zh": "人物、宠物或角色图片",
+            "en": "A picture of a person, pet or character"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "phrase",
+          "label": {
+            "zh": "短语",
+            "en": "Phrase"
+          },
+          "default": "Hello!"
+        },
+        {
+          "name": "motion",
+          "label": {
+            "zh": "动作",
+            "en": "Motion"
+          },
+          "default": "waves one hand hello with a small happy bounce"
+        }
+      ],
+      "prompt": "Help me turn the character in the input image into a white outline sticker. The character needs to be transformed into a web illustration style, and add a playful white outline short phrase: \"{{phrase}}\". Motion: the character {{motion}}, in one continuous movement that ends exactly where it began, so it loops seamlessly; the phrase stays in place.",
+      "params": {
+        "size": "1024x1024",
+        "frames": 4
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#case-10-custom-character-stickers-by-op7418",
+        "license": "Apache-2.0",
+        "author": "@op7418"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "pixel-mosaic",
+      "title": {
+        "zh": "像素马赛克",
+        "en": "Pixel mosaic"
+      },
+      "summary": {
+        "zh": "整幅画由带黑边的小方块拼成，像彩色玻璃或LED屏",
+        "en": "A subject rendered as a tight grid of black-outlined square tiles, like stained glass or an LED screen"
+      },
+      "category": "illustration",
+      "tags": [
+        "pixel",
+        "mosaic",
+        "tiles",
+        "colorful"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "subject",
+          "label": {
+            "zh": "主体",
+            "en": "Subject"
+          },
+          "default": "a tropical parrot perched on a small brown branch, shown in side profile facing right, with a large curved black beak, a pale cream face, a bright red-orange forehead and throat, vivid green upper body, and long wings and tail in saturated blue and cyan"
+        },
+        {
+          "name": "setting",
+          "label": {
+            "zh": "周围环境",
+            "en": "Surroundings"
+          },
+          "default": "dense rainforest foliage, filled edge to edge with layered green leaves in many shades"
+        }
+      ],
+      "prompt": "A vibrant pixel-art style mosaic of {{subject}}, in the middle of {{setting}}. The entire image is rendered as a tight grid of tiny square tiles with visible black outlines, creating a stained-glass or LED-screen effect. A soft glow behind the subject separates it from the background. High color contrast, rich palette, crisp tile pattern, centered composition, decorative digital mosaic aesthetic.",
+      "params": {
+        "size": "1024x1024"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/fedd1aa9fabb02f03a9397cc5bfdae503b24c3e7/README.md#no-23-social-media-post---tropical-parrot-pixel-mosaic",
+        "license": "CC-BY-4.0",
+        "author": "Erik MacKinnon (@erikmackinnon)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "packaging-design-sheet",
+      "title": {
+        "zh": "包装设计图板",
+        "en": "Packaging design sheet"
+      },
+      "summary": {
+        "zh": "中央写实包装渲染，四周配三视图、展开图和材质手写标注",
+        "en": "An industrial-design packaging sheet: hero render, technical views, dieline and material notes"
+      },
+      "category": "product",
+      "tags": [
+        "packaging",
+        "product",
+        "mockup",
+        "sketch"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "package",
+          "label": {
+            "zh": "包装",
+            "en": "Package"
+          },
+          "default": "a cold-brew coffee bottle in a folding paperboard carton"
+        },
+        {
+          "name": "materials",
+          "label": {
+            "zh": "材质与工艺",
+            "en": "Materials and finishes"
+          },
+          "default": "matte paperboard, gloss print, amber glass, foil stamping"
+        }
+      ],
+      "prompt": "Produce a professional industrial-design packaging illustration sheet for the package ({{package}}). Place a hero 3D render in the middle with photoreal materials, gentle studio lighting, and a polished commercial finish. Around it, lay out the technical views: front, side, top, bottom, an oblique angle, and a flat unfolded layout. Add line sketches showing the frame structure, fold/crease lines, seam details, and dimension arrows labeled in millimeters. Annotate materials and surface finishes ({{materials}}) with handwritten callouts. Drop in color swatches, supporting product mockups, and soft cast shadows. Background: clean sketchbook paper. Style: photoreal render mixed with pencil-sketch overlays, modern design aesthetic, ultra-detailed, portfolio quality.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/37176e57981d7e520ce7f3f0ce6dfd922fe1142d/README.md#no-103-e-commerce-main-image---industrial-packaging-design-sheet",
+        "license": "CC-BY-4.0",
+        "author": "PromptLab (@iamaiistudio)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "old-photo-restore",
+      "title": {
+        "zh": "老照片修复上色",
+        "en": "Old photo restore"
+      },
+      "summary": {
+        "zh": "修好老照片的划痕和褪色，再自然地上色",
+        "en": "Repairs an old photo's scratches and fading and brings it back in natural colour"
+      },
+      "category": "photo",
+      "tags": [
+        "restoration",
+        "colorize",
+        "vintage",
+        "photo"
+      ],
+      "inputs": [
+        {
+          "name": "photo",
+          "label": {
+            "zh": "需要修复的老照片",
+            "en": "The old photo to restore"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "task",
+          "label": {
+            "zh": "处理方式",
+            "en": "What to do"
+          },
+          "default": "restore and colorize"
+        },
+        {
+          "name": "notes",
+          "label": {
+            "zh": "补充要求",
+            "en": "Extra notes"
+          },
+          "default": "Keep every face, pose and the composition exactly as they are."
+        }
+      ],
+      "prompt": "{{task}} this photo. {{notes}}",
+      "params": {
+        "size": "auto"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#case-20-old-photo-colorization-by-geminiapp",
+        "license": "Apache-2.0",
+        "author": "@GeminiApp"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "watercolor-roadmap",
+      "title": {
+        "zh": "水彩路线图",
+        "en": "Watercolour roadmap"
+      },
+      "summary": {
+        "zh": "水彩绘本风的蜿蜒小路，沿途标出每个里程碑",
+        "en": "A storybook watercolour path winding past each milestone of a journey"
+      },
+      "category": "handdrawn",
+      "tags": [
+        "watercolor",
+        "roadmap",
+        "journey",
+        "storybook"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "language",
+          "label": {
+            "zh": "图中文字语言",
+            "en": "Language of the text"
+          },
+          "default": "Simplified Chinese (简体中文)"
+        },
+        {
+          "name": "topic",
+          "label": {
+            "zh": "这段旅程/成长路线",
+            "en": "The journey or learning path"
+          },
+          "default": "零基础学吉他：从第一个和弦到自弹自唱"
+        }
+      ],
+      "prompt": "Create a professional infographic following these specifications:\n\n## Image Specifications\n\n- **Type**: Infographic\n- **Layout**: winding-roadmap\n- **Style**: storybook-watercolor\n- **Orientation**: Landscape\n- **Language**: {{language}}\n\n## Core Principles\n\n- Follow the layout structure precisely for information architecture\n- Apply style aesthetics consistently throughout\n- If content involves sensitive or copyrighted figures, create stylistically similar alternatives\n- Keep information concise, highlight keywords and core concepts\n- Use ample whitespace for visual clarity\n- Maintain clear visual hierarchy\n\n## Text Requirements\n\n- All text must match the specified style treatment\n- Main titles should be prominent and readable\n- Key concepts should be visually emphasized\n- Labels should be clear and appropriately sized\n- Use the specified language for all text content\n\n## Layout Guidelines\n\nCurved path showing journey with milestones and checkpoints.\n\n- S-curve or winding path\n- Milestones along the path\n- Start and destination points\n- Side elements (obstacles, helpers)\n- Progress indicators\n- Visual elements: curving road or river, milestone markers/flags, scene elements along path, vehicle/character on journey, destination landmark\n- Text placement: title at top; milestone labels at each point; path section names; destination description; optional timeline indicators\n\n## Style Guidelines\n\nSoft hand-painted illustration with whimsical charm.\n\n- Color palette: soft watercolor washes - muted blues, greens, warm earth; watercolor paper texture background, white or cream; deeper pigment pools and splatter effects as accents\n- Visual elements: visible brushstrokes; soft color bleeds and gradients; white space as design element; delicate line work over washes; natural, organic shapes; dreamy, atmospheric quality\n- Typography: elegant hand-lettering; watercolor-style text; flowing, organic letterforms; integrated with illustrations\n\n---\n\nGenerate the infographic based on the content below:\n\nTopic: {{topic}}\nWrite the real content for this journey yourself: a title, a start point, 5-7 milestones in order (each with a short name and one line on what you learn or achieve there), one or two obstacles or helpers beside the path, and the destination.\n\nText labels (in {{language}}): title, milestone labels with short descriptions, path section names, destination description.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-infographic/references/styles/storybook-watercolor.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "literary-magazine-cover",
+      "title": {
+        "zh": "文艺杂志封面",
+        "en": "Literary magazine cover"
+      },
+      "summary": {
+        "zh": "大号书法刊头配蜡笔小画的城市早安文艺杂志封面",
+        "en": "A quiet city-morning literary magazine cover: big calligraphic masthead and naive crayon drawings"
+      },
+      "category": "editorial",
+      "tags": [
+        "magazine",
+        "cover",
+        "chinese",
+        "crayon",
+        "typography"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "city",
+          "label": {
+            "zh": "城市",
+            "en": "City"
+          },
+          "default": "南京"
+        },
+        {
+          "name": "date",
+          "label": {
+            "zh": "日期",
+            "en": "Date line"
+          },
+          "default": "2026.07.25 星期六"
+        },
+        {
+          "name": "objects",
+          "label": {
+            "zh": "蜡笔画的两样东西",
+            "en": "Two things to draw"
+          },
+          "default": "a decorative handheld fan with a brown handle and teal tassel, and a simple blue-outlined oval plate of thick sliced salted duck"
+        }
+      ],
+      "prompt": "Create a literary magazine cover style poster about a morning greeting for {{city}}. Use a wide horizontal canvas with a muted pale olive-green background and lots of quiet negative space. Place the main typographic weight in the upper-right: huge black Chinese calligraphic serif characters reading “{{city}}，早安”, thick, elegant, slightly oppressive like inked magazine masthead typography. Directly beneath the headline, add a thin horizontal rule on both sides of a small Chinese subtitle reading “城市清晨问候特辑”, and to the right add italic English text “Good Morning,” followed by the city's English name. On the right-middle, set the date line “{{date}}” in refined black serif numerals with the weekday in smaller Chinese text, then a tiny centered dash. Below that, create a compact almanac-style information block with a small red sun icon and the label “今日宜忌”, dotted divider lines, and exactly 2 circular badges: one labeled “宜” followed by “散心、看树、尝鲜”, and one labeled “忌” followed by “仓促、发呆过头、错过晨光”. At the bottom-right, add spaced small caps English “CITY MORNING GREETINGS”, a diagonal slash, and a small Chinese quote: “把日子过成诗 / 把清晨过成喜欢的样子”. In the lower-left, depict the theme objects as naive crayon drawing rather than realism: exactly 2 illustrated objects typical of the city's morning: {{objects}}. Outline them in dark green and blue and fill them with childlike swirls, flowers, cloud motifs and rough yellow, blue, white, green, brown, orange and red wax-crayon strokes. Add small playful doodles around them: one red star, one green circle, one yellow squiggle, one tiny green vine flourish, three short white accent strokes, and a few small blue dash marks. Overall style: calm editorial cover, literary magazine layout, refined black typography contrasted with innocent wax-crayon illustration, minimal color palette, soft paper texture, no photorealism, no extra objects, no watermark.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/82d0a42982a46214a471ba31e37c7936749541de/README.md#no-43-infographic--edu-visual---literary-nanjing-morning-magazine-cover",
+        "license": "CC-BY-4.0",
+        "author": "小小东 (@xiaoxiaodong01)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "ink-notes-before-after",
+      "title": {
+        "zh": "前后对比速写",
+        "en": "Before/After sketchnote"
+      },
+      "summary": {
+        "zh": "白底黑墨手绘的前后对比图，中间一道思维转变箭头",
+        "en": "A black-ink Before | After sketchnote with a mindset-shift arrow between"
+      },
+      "category": "infographic",
+      "tags": [
+        "comparison",
+        "before-after",
+        "sketchnote",
+        "ink"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "topic",
+          "label": {
+            "zh": "对比什么（从…到…）",
+            "en": "What changes (from … to …)"
+          },
+          "default": "团队协作：从“有事就开会”到“先写文档再讨论”"
+        },
+        {
+          "name": "language",
+          "label": {
+            "zh": "图中文字语言",
+            "en": "Language of the text"
+          },
+          "default": "Simplified Chinese (简体中文)"
+        }
+      ],
+      "prompt": "{{topic}} - Comparison View\n\nProfessional hand-drawn sketchnote comparison on pure white. Black ink line work\nwith slight wobble, in the tradition of professional sketchnoting.\n\nCONTENT: Write the real content for \"{{topic}}\" yourself — the old state on the left,\nthe new state on the right, 3-4 short points per side, a short label for the shift,\nand one tagline. All text in {{language}}.\n\nPALETTE: mono-ink — black ink dominant, sparse semantic accents\nCOLORS: Pure White background (#FFFFFF), Near Black (#1A1A1A) for all outlines,\n        text, figures, arrows; Coral Red (#E8655A) reserved for risks/gaps\n        (left/Before side); Muted Teal (#5FA8A8) reserved for positives\n        (right/After side). Color accents under 10% of canvas.\nLAYOUT: Left | Right split with vertical hand-drawn divider. Hand-lettered\n        \"Before\" label (top-left) and \"After\" label (top-right).\nLEFT SIDE: Stick figure(s) with role label above, speech bubble showing the\n           pain point, bulleted pain-point list in handwritten text.\nRIGHT SIDE: Stick figure(s) showing the new state, bulleted improvement list,\n            small positive-action icons.\nBRIDGE: Curved hand-drawn \"mindset shift\" arrow bridging left → right with\n        small inline label describing the shift.\nBOTTOM: Single-line hand-lettered tagline summarizing the takeaway.\nSTYLE: Hand-lettered headings (bold, oversized), handwritten body annotations,\n        generous white space, no computer fonts, no gradients, no shadows.\n\nDo: keep background pure white with no texture or tint; let black ink dominate outlines, text, and figures; use accent colors only for semantic highlighting; maintain confident line quality (wobble, not mess).\nDon't: fill large zones with color blocks; use perfect geometric shapes; clutter with decorative doodles — every element must carry meaning.\n\nClean composition with generous white space. Simple or no background. Main elements centered or positioned by content needs.\nColor values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.\nHuman figures: simplified stylized silhouettes or symbolic representations, not photorealistic.\nText should be large and prominent with handwritten-style fonts. Keep minimal, focus on keywords.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-article-illustrator/references/prompt-construction.md#comparison",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "fluffy-3d-icon",
+      "title": {
+        "zh": "毛绒立体图标",
+        "en": "Fluffy 3D icon"
+      },
+      "summary": {
+        "zh": "把一个扁平图标变成浮在空中、毛茸茸的3D物件",
+        "en": "Turns a simple flat icon into a soft, fur-covered 3D object floating in a studio"
+      },
+      "category": "3d",
+      "tags": [
+        "plush",
+        "fur",
+        "icon",
+        "3d"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "subject",
+          "label": {
+            "zh": "图标内容",
+            "en": "The icon"
+          },
+          "default": "a smiling cloud with a little rainbow"
+        },
+        {
+          "name": "background",
+          "label": {
+            "zh": "背景色",
+            "en": "Background"
+          },
+          "default": "light gray"
+        }
+      ],
+      "prompt": "Convert a simple flat vector icon of {{subject}} into a soft, fluffy 3D object. Use original colors. The object is completely covered in fur, with hyper-realistic fur texture and soft shadows. It is located in the center of a clean {{background}} background, floating gently in the air. The style is surreal, tactile and modern, creating a comfortable and playful feeling. Use studio lighting and high-resolution rendering.",
+      "params": {
+        "size": "1024x1024"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#example-12-fluffy-plush-toy-by-toolfolio",
+        "license": "Apache-2.0",
+        "author": "@toolfolio"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "flat-vector-portrait",
+      "title": {
+        "zh": "扁平几何肖像",
+        "en": "Flat vector portrait"
+      },
+      "summary": {
+        "zh": "硬边色块拼成的时尚扁平矢量半身像，无渐变、线条极少",
+        "en": "An editorial flat-vector bust portrait built from hard-edged interlocking color shapes"
+      },
+      "category": "illustration",
+      "tags": [
+        "vector",
+        "flat",
+        "portrait",
+        "fashion"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "subject",
+          "label": {
+            "zh": "人物与造型",
+            "en": "Character and styling"
+          },
+          "default": "a fashion model wearing oversized sunglasses and sculptural jewelry, hair styled as a sleek chin-length bob, dressed in a structured wool coat"
+        },
+        {
+          "name": "colors",
+          "label": {
+            "zh": "配色",
+            "en": "Colors"
+          },
+          "default": "cobalt blue, tangerine, blush pink, black and off-white"
+        },
+        {
+          "name": "background",
+          "label": {
+            "zh": "背景",
+            "en": "Background"
+          },
+          "default": "a flat warm sand-colored backdrop"
+        }
+      ],
+      "prompt": "Editorial flat-vector portrait of {{subject}} with a high sculptural collar, in a tight bust crop and three-quarter view, with the head tilted slightly downward. Render the face, hair, clothing, and accessories as clean interlocking color shapes with sharp geometric edges, hard-edged shadows, minimal linework, and no gradients. Limit the artwork to {{colors}}. Place the figure against {{background}}, using one simple rectangular shadow shape to frame the head without clutter. Keep the expression calm and self-assured, the silhouette bold, and the composition sleek, fashion-forward, and graphic; vertical format.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/a04a4947a6faeeea967b19a8d4a259d92db775e7/README.md#no-91-product-marketing---flat-vector-geometric-portrait",
+        "license": "CC-BY-4.0",
+        "author": "Kashberg (@Kashberg_0)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "character-design-sheet",
+      "title": {
+        "zh": "角色设定图",
+        "en": "Character sheet"
+      },
+      "summary": {
+        "zh": "按参考图生成含三视图、表情、姿势和服装的角色设定",
+        "en": "Builds a full character design sheet from one reference: proportions, three views, expressions, poses and outfits"
+      },
+      "category": "photo",
+      "tags": [
+        "character",
+        "turnaround",
+        "design",
+        "sheet"
+      ],
+      "inputs": [
+        {
+          "name": "reference",
+          "label": {
+            "zh": "角色参考图（照片或插画）",
+            "en": "A reference of the character (photo or drawing)"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "style",
+          "label": {
+            "zh": "画风",
+            "en": "Art style"
+          },
+          "default": "a clean anime illustration style on a white background"
+        },
+        {
+          "name": "expressions",
+          "label": {
+            "zh": "表情",
+            "en": "Expressions"
+          },
+          "default": "happy, angry, sad, surprised, shy and smug"
+        }
+      ],
+      "prompt": "Generate character design for me (Character Design) of the character in the input image, in {{style}}\n\nProportion design (different height comparisons, head-to-body ratio, etc.)\n\nThree views (front, side, back)\n\nExpression design (Expression Sheet) → {{expressions}}\n\nPose design (Pose Sheet) → various common poses\n\nCostume design (Costume Design)",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#case-12-generate-character-design-by-zho_zho_zho",
+        "license": "Apache-2.0",
+        "author": "@ZHO_ZHO_ZHO"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "silhouette-epic-poster",
+      "title": {
+        "zh": "剪影史诗海报",
+        "en": "Silhouette epic poster"
+      },
+      "summary": {
+        "zh": "巨大人物侧影里长出整个故事世界的电影感典藏海报",
+        "en": "A collector's movie-style poster where a giant profile silhouette holds a whole story world"
+      },
+      "category": "editorial",
+      "tags": [
+        "poster",
+        "film",
+        "silhouette",
+        "cinematic"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "theme",
+          "label": {
+            "zh": "故事或主题",
+            "en": "Story or theme"
+          },
+          "default": "Dream of the Red Chamber"
+        },
+        {
+          "name": "character",
+          "label": {
+            "zh": "剪影人物",
+            "en": "Silhouette figure"
+          },
+          "default": "Lin Daiyu"
+        }
+      ],
+      "prompt": "Automatically generate a collector's edition epic narrative poster based on {{theme}}. Use a giant, elegant silhouette of {{character}}'s profile as the outer outline. Inside the silhouette, let the complete world-building, iconic scenes, character relationships, symbolic icons, key architecture, creatures, props, and atmosphere most relevant to the theme grow naturally. This is not a simple collage but a high-end silhouette-filling narrative synthesis with double-exposure associations, enhanced for cinematic narrative expression and spatial choreography. A fusion of movie poster style and Eastern realist aesthetics, emphasizing realistic physical light and shadow, camera language, spatial depth, and narrative hierarchy. Lighting uses cinematic rim lighting with local warm accents, with restrained and realistic cool-warm contrast, adding volumetric light and light mist to enhance the sense of space. Textures should be realistic (architecture, silk, skin, stone), avoiding pure painterly strokes, retaining soft atmospheric perspective but optimized for cinematic depth of field and focus control. Fine film grain, with edge brushstrokes modified into soft cinematic transitions, large areas of negative space, and a refined, high-end layout. Quiet, grand, restrained, and infused with a strong sense of fatalism typical of Eastern cinematic storytelling. All elements must be strongly bound to the theme for instant recognition, avoiding clutter, hard collages, templated backgrounds, or cheap fantasy assets.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/c1ae7d73c6bf47548c48b5f2291c5708c1860cd8/README.md#no-87-comic--storyboard---epic-narrative-silhouette-movie-poster",
+        "license": "CC-BY-4.0",
+        "author": "李岳 (@liyue_ai)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "retro-popup-guide",
+      "title": {
+        "zh": "复古弹窗干货图",
+        "en": "Retro pop-up guide"
+      },
+      "summary": {
+        "zh": "80/90 年代电脑弹窗拼贴风的避坑干货长图",
+        "en": "A dense myth-busting guide built from stacked retro desktop pop-up windows"
+      },
+      "category": "infographic",
+      "tags": [
+        "retro",
+        "popup",
+        "pixel",
+        "guide",
+        "xiaohongshu"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "language",
+          "label": {
+            "zh": "图中文字语言",
+            "en": "Language of the text"
+          },
+          "default": "Simplified Chinese (简体中文)"
+        },
+        {
+          "name": "topic",
+          "label": {
+            "zh": "干货/避坑主题",
+            "en": "Guide or myth-busting topic"
+          },
+          "default": "新手健身最常见的 6 个误区"
+        }
+      ],
+      "prompt": "Create a professional infographic following these specifications:\n\n## Image Specifications\n\n- **Type**: Infographic (高密度信息大图)\n- **Layout**: dense-modules\n- **Style**: retro-popup-pop\n- **Orientation**: Portrait (vertical)\n- **Language**: {{language}}\n\n## Core Principles\n\n- Follow the layout structure precisely for information architecture\n- Apply style aesthetics consistently throughout\n- If content involves sensitive or copyrighted figures, create stylistically similar alternatives\n- Keep information concise, highlight keywords and core concepts\n- Use ample whitespace for visual clarity\n- Maintain clear visual hierarchy\n\n## Text Requirements\n\n- All text must match the specified style treatment\n- Main titles should be prominent and readable\n- Key concepts should be visually emphasized\n- Labels should be clear and appropriately sized\n- Use the specified language for all text content\n\n## Layout Guidelines\n\nHigh-density modular layout with 6-7 typed information modules packed with concrete data.\n\n- 6-7 distinct modules per image, each serving a specific information function\n- Every module contains concrete data: option names, numbers, percentages, parameters\n- Minimal whitespace—compact spacing prioritized over breathing room\n- Smaller text acceptable to maximize information density\n- Each module identified by coordinate label or section marker (e.g., MOD-1, SEC-A)\n\nModule archetypes (pick 6-7 that fit the topic):\n- Selection Array: grid of 4-8 options with icons, names, brief descriptions; highlight \"best choice\"\n- Specification Scale: 3-5 levels with precise numerical increments, quality indicators (faces, checkmarks)\n- Deep Dive/Detail: zoom-in callouts, internal components, cross-section or exploded view\n- Scenario Comparison: 3-6 scenarios with specific recommendations and data per scenario\n- Identification Tips: 3-5 inspection methods in look/test/check/ask format\n- Warning/Pitfall Zone: 3-5 pitfalls with consequences, 1-2 correct approaches; high visual contrast\n- Quick Reference: dense table, one-line summaries, decision flowchart, or key takeaways\n\nText placement: main title at top, prominent and impactful; subtitle with module count (\"X大维度全面解析...\"); module headers inside colored badges or labeled frames; body text compact, multiple columns within modules; numbers highlighted with accent colors, slightly larger than body text.\n\nInformation density rules: every corner should contain useful information or metadata; no decorative-only empty space; each module must have specific data points, not generic descriptions; dense but organized.\n\n## Style Guidelines\n\nRetro pixel popup × pop-art collage — content rendered as a stack of 80/90s desktop dialog windows with thick black outlines, flat color fills, and bright cyan or vintage cream backgrounds.\n\nColor palette:\n- Background: Bright cyan (#12B8DE) primary canvas, vintage cream (#F5F0E6) alternate\n- Window fills: Vintage cream (#F5F0E6) and pure white (#FFFFFF)\n- Primary text and outlines: Pure black (#000000)\n- Reverse text: Pure white on solid black title bars\n- Accent fills (small areas only): Salmon pink, sky blue, mustard yellow, mint green — muted retro tones\n\nVisual elements:\n- 80s/90s desktop popup windows with title bars, close buttons (×), and chunky borders\n- Multiple windows tiled or lightly overlapping with offset solid-black drop shadows for depth\n- ERROR / ALERT / WARNING dialogs to highlight misconceptions, common pitfalls, risks\n- File-window vignettes labeled with retro filenames (PROBLEMS.EXE, METHOD.PNG, BURNOUT.PSD, FOCUS_SCAN, SYSTEM_ALERT, IDEAS_MISSING)\n- Progress bars for completion, difficulty, conversion rate, or trend\n- Pixel-style chunky icons: folders, magnifiers, gears, exclamation marks, floppy disks, hourglasses\n- Action buttons with thick black borders and short pop-style copy: OK, CANCEL, FIX IT, SCAN, PLAY, RETRY, SAVE\n- Comparison data rendered as windowed lists or small tabular dialogs\n- Uniform thick black outlines on every window, button, icon, and divider\n- Pure 2D flat color fills throughout — no gradients, no glow, no glass\n\nTypography:\n- Headers: Pixel / dot-matrix / chunky bitmap display fonts, large and high-contrast\n- Body: Retro monospace or system-style sans-serif, high legibility\n- Title bars: Reverse white on solid black, all-caps preferred\n- Decorative all-caps English allowed for filenames, status strings, button labels (PROBLEMS.EXE, OK, CANCEL); body content text remains in {{language}}\n\nStyle enforcement:\n- Every information chunk must live inside a window, dialog, button, or progress bar — no floating elements\n- Uniform thick black outlines everywhere; offset solid-black drop shadows for stacked-window depth\n- Limit accent palette to ~4 colors per composition; let cyan or cream dominate the canvas\n- Maintain low-fi pixel/popup feel; humorous popup copy welcome, polished modern UI prohibited\n\nAvoid: modern UI styles (glassmorphism, neumorphism, soft shadows, blurs, gradients); 3D rendering, photorealism, ray-traced shadows; hand-drawn wobble, watercolor washes, or sketch textures; smooth anti-aliased curves on icons (prefer chunky pixel/stair-step edges); pure black backgrounds — keep cyan or cream as the canvas.\n\nColor values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.\n\n---\n\nGenerate the infographic based on the content below:\n\nTopic: {{topic}}\nWrite the real, accurate content for this topic yourself: a main title, a subtitle with the module count, and 6-7 window modules — pitfalls as ERROR/WARNING dialogs with their consequences, the correct methods, a quick checklist and a quick-reference summary — each with concrete numbers and specific advice.\n\nText labels (in {{language}}): title, subtitle, window contents and tips; window titles, filenames and button labels may stay in decorative all-caps English.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "JimLiu/baoyu-skills",
+        "url": "https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-infographic/references/styles/retro-popup-pop.md",
+        "license": "MIT",
+        "author": "Jim Liu 宝玉 (@dotey)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "line-art-palette-color",
+      "title": {
+        "zh": "线稿上色",
+        "en": "Line art coloring"
+      },
+      "summary": {
+        "zh": "按你给的色卡给线稿里的角色上色",
+        "en": "Colors the character in a line drawing with the palette you name"
+      },
+      "category": "photo",
+      "tags": [
+        "lineart",
+        "coloring",
+        "palette",
+        "anime"
+      ],
+      "inputs": [
+        {
+          "name": "lineart",
+          "label": {
+            "zh": "线稿图",
+            "en": "A line drawing"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "palette",
+          "label": {
+            "zh": "色卡",
+            "en": "Color palette"
+          },
+          "default": "soft pastel pink, mint green, cream white and deep navy"
+        },
+        {
+          "name": "shading",
+          "label": {
+            "zh": "上色方式",
+            "en": "Shading"
+          },
+          "default": "clean anime cel shading, keeping every original line"
+        }
+      ],
+      "prompt": "Accurately use the color palette ({{palette}}) to color the character in the input image, with {{shading}}.",
+      "params": {
+        "size": "auto"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#case-13-color-line-art-with-color-palette-by-zho_zho_zho",
+        "license": "Apache-2.0",
+        "author": "@ZHO_ZHO_ZHO"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "letterform-city-poster",
+      "title": {
+        "zh": "字母城市海报",
+        "en": "Letterform city poster"
+      },
+      "summary": {
+        "zh": "城市名大字母里装满当地地标的扁平矢量旅行海报",
+        "en": "A Swiss-style travel poster: the city's name in giant letters, each filled with local scenes"
+      },
+      "category": "editorial",
+      "tags": [
+        "poster",
+        "typography",
+        "travel",
+        "vector"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "city",
+          "label": {
+            "zh": "城市",
+            "en": "City"
+          },
+          "default": "Ahmedabad, India"
+        },
+        {
+          "name": "palette",
+          "label": {
+            "zh": "配色",
+            "en": "Palette"
+          },
+          "default": "dusty teal, terracotta, sand beige, cream, olive, burnt orange"
+        }
+      ],
+      "prompt": "Ultra-high-resolution landscape typography travel poster of {{city}}. Giant bold sans-serif word spelling the city's name in capital letters, centered across the poster, each letter containing different flat vector scenes of the city — its best-known landmarks, riverfront and bridges, heritage houses, monuments and places of worship, metro train, local street traffic, festivals, modern skyline, and street life. Letters act like architectural gallery windows with connected urban panorama. Thin panoramic strip at top with skyline silhouettes, metro, cars, birds, river bridge, boats, clouds, and warm sun. Mid-century modern Swiss graphic design, minimal vector illustration, architectural infographic aesthetic, retro travel poster branding, flat geometric shapes only, no realism, no gradients, clean vector edges, strong negative space, editorial layout, museum gift shop aesthetic. Muted palette inspired by the city: {{palette}}. Soft ivory background, premium typography, perfectly spelled English text, ultra-clean composition, print-ready 8K quality, no AI artifacts, no distorted text.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/ea94b0f463b7d4f457f4ea065284298e80c14634/README.md#no-35-infographic--edu-visual---minimalist-typography-travel-poster",
+        "license": "CC-BY-4.0",
+        "author": "ANKIT PATEL (@Ankit_patel211)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "hairstyle-grid",
+      "title": {
+        "zh": "九宫格换发型",
+        "en": "Hairstyle grid"
+      },
+      "summary": {
+        "zh": "同一张脸试九种发型，排成3×3九宫格",
+        "en": "Tries nine different hairstyles on the same face in a 3x3 grid"
+      },
+      "category": "photo",
+      "tags": [
+        "hairstyle",
+        "makeover",
+        "grid",
+        "portrait"
+      ],
+      "inputs": [
+        {
+          "name": "photo",
+          "label": {
+            "zh": "人像照片",
+            "en": "A portrait photo"
+          }
+        }
+      ],
+      "slots": [
+        {
+          "name": "hairstyles",
+          "label": {
+            "zh": "发型方向",
+            "en": "Hairstyles"
+          },
+          "default": "different hairstyles that suit them, from short to long"
+        }
+      ],
+      "prompt": "Generate avatars of this person with {{hairstyles}} in a 3x3 grid format",
+      "params": {
+        "size": "1024x1024"
+      },
+      "source": {
+        "repo": "PicoTrex/Awesome-Nano-Banana-images",
+        "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md#case-15-change-multiple-hairstyles-by-balconychy",
+        "license": "Apache-2.0",
+        "author": "@balconychy"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "swiss-grid-poster",
+      "title": {
+        "zh": "瑞士网格海报",
+        "en": "Swiss grid poster"
+      },
+      "summary": {
+        "zh": "非对称模块网格排四张黑白照片的先锋杂志海报页",
+        "en": "An avant-garde magazine poster page: four monochrome photos in an asymmetric modular grid"
+      },
+      "category": "editorial",
+      "tags": [
+        "poster",
+        "swiss",
+        "grid",
+        "typography"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "images",
+          "label": {
+            "zh": "四张照片",
+            "en": "The four images"
+          },
+          "default": "one high-contrast close portrait of a woman with cropped silver hair, one cinematic photograph of a vintage coupe on a rain-slick road, one striking image of a white heron, and one atmospheric photograph of a foggy coastal highway at dawn"
+        },
+        {
+          "name": "accents",
+          "label": {
+            "zh": "点缀色",
+            "en": "Accent colors"
+          },
+          "default": "signal red and pale cobalt blue"
+        },
+        {
+          "name": "title",
+          "label": {
+            "zh": "标题",
+            "en": "Title"
+          },
+          "default": "NOCTURNE"
+        }
+      ],
+      "prompt": "Avant-garde graphic design poster page, elegant editorial layout, off-white background, vertical format. Build a clean asymmetrical modular grid with four distinct image blocks: {{images}}, each contained in its own rectangular block. Use black as the dominant color with subtle accents of {{accents}}, minimal but refined. Add one abstract distortion or texture panel to reinforce the experimental design language. Include a bold title reading “{{title}}”, a small minimalist logo built from the title's initials, microtypography, short editorial text columns, tiny serial numbers, thin dividers, small captions, and elegant negative space. High-fashion graphic design aesthetic, niche magazine page, refined Swiss-meets-avant-garde composition, crisp typography, monochrome photography, subtle blur and texture variation, sophisticated art-direction.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/10694a37e3c7a1101e93173dae1d20940c46e914/README.md#no-87-product-marketing---avant-garde-modular-graphic-design-poster",
+        "license": "CC-BY-4.0",
+        "author": "Anissa (@SimplyAnnisa)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "y2k-scrapbook-poster",
+      "title": {
+        "zh": "Y2K拼贴海报",
+        "en": "Y2K scrapbook poster"
+      },
+      "summary": {
+        "zh": "黑白人物剪贴配白色手绘涂鸦和贴纸字的千禧风拼贴海报",
+        "en": "A Y2K scrapbook collage poster: a black-and-white cutout figure, white doodles and sticker lettering"
+      },
+      "category": "editorial",
+      "tags": [
+        "collage",
+        "zine",
+        "y2k",
+        "poster",
+        "doodle"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "subject",
+          "label": {
+            "zh": "主角",
+            "en": "Subject"
+          },
+          "default": "young woman in side profile wearing large wireless headphones, peacefully enjoying music with eyes closed. She wears an oversized vintage denim jacket with visible stitching and relaxed streetwear styling"
+        },
+        {
+          "name": "background",
+          "label": {
+            "zh": "背景色",
+            "en": "Background color"
+          },
+          "default": "turquoise/aqua and deep green"
+        }
+      ],
+      "prompt": "Create an original Y2K-inspired scrapbook collage poster featuring a stylish {{subject}}.\nThe subject should appear as a high-contrast black-and-white photographic cutout with thick white sticker-style outline around the entire body, creating a trendy collage aesthetic.\nUse a clean solid vibrant {{background}} background with playful white hand-drawn doodle illustrations surrounding the character. Include floating planets with rings, stars, constellations, meteors, rockets, astronauts, satellites, orbit lines, abstract swirls, sparkles, and musical notes.\nAdd dynamic sketch arrows, crown doodles, motion lines, and layered graphic elements around the head and body to create movement and youthful energy. Some doodles should overlap the subject naturally for a realistic scrapbook effect.\nIntegrate modern Gen-Z typography in a mix of handwritten script and bubbly sticker-style text. Use original phrases like:\n“lost in you”\n“vibes only”\n“dream explore repeat”\n“cosmic soul”\n“beyond the stars”\nComposition should feel creatively chaotic yet balanced, inspired by modern online moodboard collage art, early-2010s blog aesthetics, music playlist cover designs, indie teen magazine layouts, and social-media editorial posters.\nVisual style:\nY2K collage aesthetic\nIndie music poster vibes\nScrapbook journal style\nModern streetwear editorial\nCute doodle graphics\nTrendy Gen-Z branding\nMinimal but highly stylized\nDreamy youthful atmosphere\nDesign details:\nThick white contour cutout around subject\nWhite doodle overlays\nClean negative space\nSoft grain texture\nHigh-detail fabric texture\nHand-drawn imperfect sketch lines\nDynamic asymmetrical composition\nProfessional graphic design layout\nViral social-media-ready aesthetic\nHigh-resolution print-quality artwork\nVertical poster format\nUse no real brand names, logos or copyright marks; ensure the artwork looks fully original, inspired by modern scrapbook collage trends rather than copied artwork. Ultra detailed, aesthetic masterpiece, highly polished graphic design.",
+      "params": {
+        "size": "1024x1536"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/fe1fb317e721429afaa604e475ed5e1d2d3babb8/README.md#no-27-social-media-post---y2k-scrapbook-collage-poster",
+        "license": "CC-BY-4.0",
+        "author": "Al-Shamus (@im_shahid7)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    },
+    {
+      "id": "magazine-feature-spread",
+      "title": {
+        "zh": "杂志双页跨版",
+        "en": "Magazine feature spread"
+      },
+      "summary": {
+        "zh": "左页暗调电影感大图、右页留白信息排版的杂志双页跨版",
+        "en": "A two-page magazine spread: a moody cinematic photo page beside a clean information page"
+      },
+      "category": "editorial",
+      "tags": [
+        "magazine",
+        "spread",
+        "layout",
+        "brochure"
+      ],
+      "inputs": [],
+      "slots": [
+        {
+          "name": "topic",
+          "label": {
+            "zh": "专题内容",
+            "en": "Feature topic"
+          },
+          "default": "a publishing and branding service that turns founders' expertise into books"
+        },
+        {
+          "name": "scene",
+          "label": {
+            "zh": "左页画面",
+            "en": "Left-page scene"
+          },
+          "default": "a seated businessman in a navy bespoke suit, white shirt, dark tie, white pocket square, and wristwatch sits in a leather chair in a sophisticated office lounge, one hand near his chin, posed thoughtfully beside a glossy wooden table"
+        },
+        {
+          "name": "language",
+          "label": {
+            "zh": "正文语言",
+            "en": "Body text language"
+          },
+          "default": "Simplified Chinese"
+        }
+      ],
+      "prompt": "Create a luxurious magazine-style PR editorial spread for {{topic}}, designed as a two-page brochure layout. The left half is a dark, cinematic photographic scene: {{scene}}. The lighting is moody and warm, with reflections from tall windows and a premium atmosphere. On this dark left page, place large elegant serif headline text in English naming the feature, stacked in two lines near the upper left in muted gold. Below it, add multiple lines of {{language}} copy in white, including a larger subheadline and several short body paragraphs arranged vertically. Near the lower left, include a bordered dark box containing exactly 4 checklist items, each preceded by a check mark, with {{language}} text. Put a small page number \"02\" in the bottom-left corner. The right half is a clean white editorial information page with refined minimalist typography and generous spacing. At the top, place a large {{language}} headline in black, aligned upper center-right, with two short {{language}} body text blocks beneath it; on the upper far right include a small still-life photo related to the topic near a bright window with greenery. Across the middle, add a centered {{language}} section title for five benefits, followed by exactly 5 numbered columns labeled 1 through 5, each with a short {{language}} heading and several lines of smaller explanatory {{language}} text. Beneath that, add another centered {{language}} section title for workflow, followed by exactly 4 step blocks laid out horizontally, STEP 01 to STEP 04, each with a simple line icon, the English word STEP plus a two-digit number, a short {{language}} subtitle, and a few lines of smaller {{language}} description, with small chevrons between steps. Along the bottom of the right page, place exactly 3 rectangular photos side by side showing the topic in real use. Under these images, add a prominent {{language}} closing statement in a serif style on the lower left, and a smaller {{language}} paragraph on the lower right. Put page number \"03\" in the bottom-right corner. Write real, sensible copy about the topic. Use a premium palette of deep navy, black, warm brown, ivory, and muted gold, with a balance of editorial luxury, trust, and high-end publishing aesthetics. The overall composition should feel like a real magazine advertisement or consulting brochure, polished, photorealistic, elegant, and credible.",
+      "params": {
+        "size": "1536x1024"
+      },
+      "source": {
+        "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+        "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2/blob/1dcf132955f7ac159c2d9957f1e46143acc066f1/README.md#no-92-product-marketing---luxury-publishing-branding-editorial-spread",
+        "license": "CC-BY-4.0",
+        "author": "Publishing Branding (@PB_JPN)"
+      },
+      "tested": [
+        "gpt-image-2.6"
+      ]
+    }
+  ]
+}

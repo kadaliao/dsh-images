@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import test, { afterEach } from 'node:test';
 
 import { TOOL_NAME, apply, renderResult, settingsOf } from '../index.js';
+import { PNG_KEYWORD, decodeRecipe, encodeRecipe, pngText, recipeInPng } from '../lib/recipes.mjs';
 import { LITELLM_SAMPLE, PNG_2x3, sheetPng } from './fixtures.mjs';
 
 const unloads = [];
@@ -18,7 +19,7 @@ afterEach(() => {
  * provider profile, a credentials service, an attachment store and the web
  * server's routes. `reply` is what the provider answers.
  */
-function harness({ home, config = { model: 'gpt-image-1' }, reply, status = 200, attachments = true, catalog = LITELLM_SAMPLE } = {}) {
+function harness({ home, config = { model: 'gpt-image-1' }, reply, status = 200, attachments = true, catalog = LITELLM_SAMPLE, community } = {}) {
   process.env.DSH_HOME = home ?? mkdtempSync(join(tmpdir(), 'images-home-'));
   const tools = new Map();
   const routes = new Map();
@@ -35,6 +36,13 @@ function harness({ home, config = { model: 'gpt-image-1' }, reply, status = 200,
     if (String(url).endsWith('/models')) {
       if (init.headers.authorization === 'Bearer bad') return { ok: false, status: 401, text: async () => JSON.stringify({ error: { message: 'invalid api key' } }) };
       return { ok: true, status: 200, text: async () => JSON.stringify({ data: [{ id: 'gpt-4o' }, { id: 'gpt-image-1.5', pricing: { per_image: 0.05 } }, { id: 'flux-pro', modalities: { output: ['image'] } }] }) };
+    }
+    if (String(url).includes('dsh-images-recipes')) {
+      // The community index: absent unless the test serves one.
+      const body = typeof community === 'function' ? community(String(url)) : String(url).endsWith('index.json') ? community : undefined;
+      if (body === undefined) return { ok: false, status: 404, headers: new Map(), arrayBuffer: async () => new ArrayBuffer(0) };
+      const bytes = Buffer.isBuffer(body) ? body : Buffer.from(JSON.stringify(body));
+      return { ok: true, status: 200, headers: new Map(), arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) };
     }
     if (String(url).endsWith('/picture.png')) return { ok: true, status: 200, arrayBuffer: async () => PNG_2x3.buffer.slice(PNG_2x3.byteOffset, PNG_2x3.byteOffset + PNG_2x3.byteLength) };
     const sent = init.body instanceof FormData ? Object.fromEntries([...init.body.keys()].map((k) => [k, init.body.getAll(k)])) : JSON.parse(init.body);
@@ -148,9 +156,10 @@ test('settings normalize', () => {
 
 test('the tool asks the session\'s provider for the image, saves it, and the result carries the picture', async () => {
   const h = harness();
-  assert.deepEqual([...h.tools.keys()], [TOOL_NAME]);
+  assert.deepEqual([...h.tools.keys()], [TOOL_NAME, 'image_recipes']);
   const tool = h.tools.get(TOOL_NAME);
-  assert.equal(tool.parameters.prompt.required, true);
+  // A recipe can stand in for the prompt.
+  assert.notEqual(tool.parameters.prompt.required, true);
 
   const value = await h.run({ prompt: 'a red circle on white', size: '1536x1024' });
   assert.equal(h.calls[0].url, 'http://127.0.0.1:3425/v1/images/generations');
@@ -360,7 +369,7 @@ test('/images off takes the tool away and on brings it back', async () => {
   assert.match(run('off').text, /off/);
   assert.equal(h.tools.size, 0);
   assert.match(run('on').text, /on/);
-  assert.equal(h.tools.size, 1);
+  assert.deepEqual([...h.tools.keys()], [TOOL_NAME, 'image_recipes']);
   await h.run({ prompt: 'x' });
   assert.match(run('').text, /1 image in the gallery/);
 });
@@ -521,4 +530,140 @@ test('without the catalog a model nothing knows falls back to the typed price, a
   const off = harness({ config: { model: 'mystery-draw', priceCatalog: false } });
   assert.equal((await off.run({ prompt: 'x' })).cost, undefined);
   assert.equal(off.calls.filter((c) => c.url.includes('model_prices')).length, 0);
+});
+
+// --- recipes ---------------------------------------------------------------------------
+
+test('a recipe draws with its template, its own size and the blanks given', async () => {
+  const h = harness();
+  const value = await h.run({ recipe: 'builtin:pixel-mosaic', slots: { subject: 'a red fox' }, prompt: 'keep it calm' });
+  const sent = JSON.parse(h.calls.find((c) => c.url.endsWith('/images/generations')).init.body);
+  assert.match(sent.prompt, /a red fox/);
+  assert.doesNotMatch(sent.prompt, /\{\{/);
+  assert.match(sent.prompt, /Additional direction: keep it calm$/);
+  assert.equal(sent.size, '1024x1024');
+  assert.equal(value.recipe.ref, 'builtin:pixel-mosaic');
+  assert.match(renderResult({}, value)[0].text, /using the recipe "Pixel mosaic" \(builtin:pixel-mosaic\)/);
+  const [item] = (await h.request('/__dsh_images/list')).items;
+  assert.equal(item.recipe.ref, 'builtin:pixel-mosaic');
+  assert.equal(item.recipe.title.zh, '像素马赛克');
+  assert.equal(item.prompt, sent.prompt);
+
+  // The call's own size wins over the recipe's.
+  await h.run({ recipe: 'builtin:pixel-mosaic', size: '1536x1024' });
+  assert.equal(JSON.parse(h.calls.filter((c) => c.url.endsWith('/images/generations')).at(-1).init.body).size, '1536x1024');
+
+  await assert.rejects(h.run({ recipe: 'builtin:desk-figurine' }), /works on 1 input image .* and 0 were given/);
+  await assert.rejects(h.run({ recipe: 'builtin:nope' }), /there is no recipe "builtin:nope"/);
+  await assert.rejects(h.run({}), /prompt must be a non-empty/);
+});
+
+test('image_recipes finds, reads, keeps and imports recipes', async () => {
+  const h = harness();
+  const tool = h.tools.get('image_recipes');
+  const run = (args) => tool.execute(args, {});
+  const found = await run({ action: 'search', query: 'magazine' });
+  assert.ok(found.recipes.some((r) => r.ref === 'builtin:fashion-magazine-cover'));
+  assert.match(tool.output.render({}, found)[0].text, /builtin:fashion-magazine-cover — Fashion magazine cover \/ 时尚杂志封面 \[editorial\]/);
+  const photos = await run({ action: 'search', category: 'photo', limit: 50 });
+  assert.ok(photos.recipes.length >= 5 && photos.recipes.every((r) => r.line.includes('[photo]') && r.line.includes('Needs 1 input image')));
+  const got = await run({ action: 'get', ref: 'builtin:desk-figurine' });
+  assert.equal(got.recipe.ref, 'builtin:desk-figurine');
+  assert.match(tool.output.render({}, got)[0].text, /^Built into Images\./);
+  assert.equal((await run({ action: 'get', ref: 'builtin:nope' })).ok, false);
+
+  const saved = await run({ action: 'save', recipe: { title: { en: 'Neon sign', zh: '霓虹灯牌' }, prompt: 'A neon sign reading "{{text}}"', slots: [{ name: 'text', default: 'OPEN' }] } });
+  assert.equal(saved.ref, 'mine:neon-sign');
+  assert.match(tool.output.render({}, saved)[0].text, /Saved as the user's own recipe/);
+  const imported = await run({ action: 'import', code: `look: ${encodeRecipe({ ...(await run({ action: 'get', ref: 'builtin:pixel-mosaic' })).recipe })}` });
+  assert.equal(imported.ref, 'mine:pixel-mosaic');
+  assert.equal((await run({ action: 'import', code: 'nothing' })).ok, false);
+  assert.equal((await run({ action: 'save', recipe: {}, fromImage: 'x' })).ok, false);
+
+  // A recipe of the user's own with no cover takes its first picture.
+  await h.run({ recipe: 'mine:neon-sign' });
+  const listing = await h.request('/__dsh_images/recipes');
+  const neon = listing.recipes.find((r) => r.ref === 'mine:neon-sign');
+  assert.equal(neon.uses, 1);
+  const cover = await h.request(neon.coverUrl);
+  assert.equal(cover.status, 200);
+  assert.ok(cover.body.equals(PNG_2x3));
+});
+
+test('the recipe routes list, keep, pass on and take in recipes', async () => {
+  const h = harness({
+    community: { format: 1, repo: 'kadaliao/dsh-images-recipes', recipes: [{ id: 'riso', title: 'Riso', prompt: 'riso {{x}}', issue: 3, stats: { votes: 4 } }] },
+  });
+  await h.run({ prompt: 'a lighthouse at night', size: '1536x1024' });
+  const [picture] = (await h.request('/__dsh_images/list')).items;
+
+  let listing = await h.request('/__dsh_images/recipes');
+  assert.equal(listing.ok, true);
+  assert.deepEqual(listing.sources.map((s) => s.key), ['builtin', 'mine', 'community']);
+  assert.ok(listing.sources[0].count >= 30);
+  assert.equal(listing.sources[2].count, 1);
+  assert.equal(listing.recipes.find((r) => r.ref === 'community:riso').stats.votes, 4);
+  assert.equal(listing.recipes.find((r) => r.ref === 'community:riso').coverFile, undefined);
+
+  const post = (body) => h.request('/__dsh_images/recipes', { method: 'POST', body });
+  // A picture kept as a recipe, its picture the cover.
+  const kept = await post({ action: 'save-image', id: picture.id });
+  assert.equal(kept.ok, true);
+  assert.match(kept.recipe.ref, /^mine:a-lighthouse-at-night/);
+  assert.equal(kept.recipe.prompt, 'a lighthouse at night');
+  assert.equal(kept.recipe.params.size, '1536x1024');
+  assert.equal((await h.request(kept.recipe.coverUrl)).status, 200);
+  assert.equal((await post({ action: 'save-image', id: picture.id })).duplicate, true);
+
+  // A recipe code to send, and taken in again elsewhere.
+  const exported = await post({ action: 'export', ref: 'builtin:pixel-mosaic', lang: 'zh' });
+  assert.match(exported.text, /^【DSH Images 玩法】像素马赛克/);
+  assert.equal(decodeRecipe(exported.text).id, 'pixel-mosaic');
+  const imported = await post({ action: 'import', text: `朋友发来的：\n${exported.text}` });
+  assert.equal(imported.recipe.ref, 'mine:pixel-mosaic');
+  assert.equal((await post({ action: 'import', text: exported.text })).duplicate, true);
+  assert.match((await post({ action: 'import', text: 'hello' })).reason, /no recipe code/);
+
+  // A built-in recipe copied to the user's own keeps its credit.
+  const copied = await post({ action: 'copy', ref: 'builtin:ukiyo-e-modern-scene' });
+  assert.equal(copied.recipe.ref, 'mine:ukiyo-e-modern-scene');
+  assert.equal(copied.recipe.source.license, 'CC-BY-4.0');
+
+  // A download that carries its recipe, and the picture imported back.
+  const file = await h.request(`${picture.url}?download=1&recipe=1`);
+  assert.equal(file.status, 200);
+  assert.equal(recipeInPng(new Uint8Array(file.body)).prompt, 'a lighthouse at night');
+  assert.equal(pngText(new Uint8Array((await h.request(`${picture.url}?download=1`)).body)).size, 0, 'a plain download stays plain');
+  await post({ action: 'delete', ref: kept.recipe.ref });
+  const fromPicture = await post({ action: 'import', png: file.body.toString('base64') });
+  assert.equal(fromPicture.ok, true);
+  assert.equal(fromPicture.recipe.prompt, 'a lighthouse at night');
+  assert.ok(fromPicture.recipe.coverUrl, 'the imported picture is its cover');
+  assert.match((await post({ action: 'import', png: PNG_2x3.toString('base64') })).reason, /carries no recipe/);
+
+  // A share card gets the recipe written into it.
+  const card = await post({ action: 'card', ref: 'builtin:pixel-mosaic', png: PNG_2x3.toString('base64') });
+  assert.equal(pngText(new Uint8Array(Buffer.from(card.png, 'base64'))).has(PNG_KEYWORD), true);
+  assert.equal((await post({ action: 'card', ref: 'builtin:pixel-mosaic', png: 'AAAA' })).ok, false);
+
+  // Only the user's own recipes go to the community, through a prefilled issue.
+  const submit = await post({ action: 'submit', ref: fromPicture.recipe.ref, lang: 'zh' });
+  const url = new URL(submit.url);
+  assert.equal(`${url.origin}${url.pathname}`, 'https://github.com/kadaliao/dsh-images-recipes/issues/new');
+  assert.equal(url.searchParams.get('template'), 'recipe.yml');
+  assert.match(url.searchParams.get('title'), /^\[配方\] /);
+  assert.equal(decodeRecipe(url.searchParams.get('recipe')).prompt, 'a lighthouse at night');
+  assert.equal((await post({ action: 'submit', ref: 'builtin:pixel-mosaic' })).ok, false);
+
+  // Edit and delete are for the user's own only.
+  const updated = await post({ action: 'update', ref: fromPicture.recipe.ref, patch: { title: { en: 'Lighthouse' }, prompt: 'a lighthouse, {{mood}}' } });
+  assert.deepEqual(updated.recipe.slots.map((s) => s.name), ['mood']);
+  assert.equal((await post({ action: 'update', ref: 'builtin:pixel-mosaic', patch: {} })).ok, false);
+  assert.equal((await post({ action: 'delete', ref: 'builtin:pixel-mosaic' })).ok, false);
+  assert.equal((await post({ action: 'delete', ref: fromPicture.recipe.ref })).ok, true);
+
+  // Sources: drop the community one.
+  listing = await post({ action: 'sources', urls: [] });
+  assert.deepEqual(listing.sources.map((s) => s.key), ['builtin', 'mine']);
+  assert.equal((await h.request('/__dsh_images/recipe-cover/builtin%3Anope')).status, 404);
 });

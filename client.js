@@ -28,6 +28,7 @@ window.__ModuleLoader__.load({
     const SETTINGS_ROUTE = '/__dsh_images/settings';
     const MODELS_ROUTE = '/__dsh_images/models';
     const CATALOG_ROUTE = '/__dsh_images/catalog';
+    const RECIPES_ROUTE = '/__dsh_images/recipes';
     const SIZES = ['1024x1024', '1536x1024', '1024x1536'];
     const QUALITIES = ['low', 'medium', 'high'];
     const PAGE = 40;
@@ -278,13 +279,14 @@ window.__ModuleLoader__.load({
      * corner, the whole tile opening the lightbox. `item` carries `src`, `id`,
      * `mediaType`, `width`, `height`, `prompt`.
      */
-    function Tile({ t, item, onOpen, onDelete, caption = null, radius = 12, maxHeight }) {
+    function Tile({ t, item, onOpen, onDelete, caption = null, radius = 12, maxHeight, extraActions = [] }) {
       const [hover, setHover] = useState(false);
       const [menu, setMenu] = useState(false);
       const ratio = item.width > 0 && item.height > 0 ? `${item.width} / ${item.height}` : undefined;
       const actions = [
         { id: 'download', run: () => download(item) },
         ...(item.prompt ? [{ id: 'copyPrompt', run: () => copyText(item.prompt) }] : []),
+        ...extraActions,
         ...(onDelete ? [{ id: 'delete', run: () => onDelete(item), danger: true }] : []),
       ];
       const showControls = hover || menu;
@@ -729,8 +731,10 @@ window.__ModuleLoader__.load({
       const t = typeof props.t === 'function' ? props.t : fallbackT;
       const { phase, block } = props;
       const args = parseArgs(block);
-      const prompt = typeof args.prompt === 'string' ? args.prompt : '';
       const settled = phase === 'result';
+      // With a recipe the call's own prompt is only extra direction; the result has the whole one.
+      const prompt = typeof args.prompt === 'string' && args.prompt !== '' ? args.prompt : settled && typeof block?.meta?.prompt === 'string' ? block.meta.prompt : '';
+      const recipeTitle = block?.meta?.recipe?.title ? pickText(block.meta.recipe.title, t('lang')) : typeof args.recipe === 'string' ? args.recipe : '';
       const images = settled ? resultImages(block) : [];
       const shown = useSources(images, props.loadImage);
       const box = useLightbox();
@@ -743,6 +747,7 @@ window.__ModuleLoader__.load({
         settled && !block.isError && shown[0]?.model
           ? h('span', { style: { color: C.faint, flex: 'none' } }, [shown[0].model, block.meta?.cost ? fmtCost(block.meta.cost) : null].filter(Boolean).join(' · '))
           : null,
+        recipeTitle ? h('span', { 'data-dsh-images-recipe-chip': true, style: { color: C.faint, flex: 'none' } }, t('withRecipe', { title: recipeTitle })) : null,
         Array.isArray(args.images) && args.images.length > 0 ? h('span', { style: { color: C.faint, flex: 'none' } }, t('fromInputs', { n: args.images.length })) : null,
         !settled ? h('span', { style: { color: C.faint, fontStyle: 'italic' } }, t(phase === 'preparing' ? 'preparing' : 'generating')) : null,
       );
@@ -901,7 +906,21 @@ window.__ModuleLoader__.load({
       const [loadingMore, setLoadingMore] = useState(false);
       const [totals, setTotals] = useState({});
       const [settingsOpen, setSettingsOpen] = useState(false);
+      // A notice: a string, or {text, action} for one with a button.
       const [toast, setToast] = useState('');
+      const [tab, setTabState] = useState(() => {
+        try {
+          return globalThis.localStorage?.getItem(TAB_KEY) === 'recipes' ? 'recipes' : 'gallery';
+        } catch {
+          return 'gallery';
+        }
+      });
+      const [recipes, setRecipes] = useState(null);
+      const [recipesFailed, setRecipesFailed] = useState(false);
+      const [sheet, setSheet] = useState(null);
+      const [dialog, setDialog] = useState(null);
+      const lang = t('lang');
+      const drafts = props.drafts;
       const box = useLightbox();
       const alive = useRef(true);
       const itemsRef = useRef(items);
@@ -993,6 +1012,101 @@ window.__ModuleLoader__.load({
             }
           : undefined;
 
+      const setTab = (next) => {
+        setTabState(next);
+        try {
+          globalThis.localStorage?.setItem(TAB_KEY, next);
+        } catch {
+          // Remembering the tab is a convenience.
+        }
+        if (next === 'recipes') void loadRecipes();
+      };
+      const recipesRef = useRef(recipes);
+      recipesRef.current = recipes;
+      /** The joined recipe list; resolves to it, or null when the host cannot be reached. */
+      const loadRecipes = () =>
+        getJson(RECIPES_ROUTE)
+          .then((body) => {
+            if (!alive.current) return null;
+            if (!body?.ok) {
+              if (recipesRef.current === null) setRecipesFailed(true);
+              return null;
+            }
+            setRecipesFailed(false);
+            setRecipes(body);
+            return body;
+          })
+          .catch(() => {
+            if (alive.current && recipesRef.current === null) setRecipesFailed(true);
+            return null;
+          });
+      useEffect(() => {
+        if (tab === 'recipes') void loadRecipes();
+      }, []);
+      /** Show the sheet of the recipe `ref` names. */
+      const openRef = (ref) =>
+        Promise.resolve(recipesRef.current ?? loadRecipes()).then((data) => {
+          const hit = (data?.recipes ?? []).find((r) => r.ref === ref);
+          if (hit) setSheet(hit);
+          else setToast(t('recipeGone'));
+          return hit;
+        });
+      const afterImport = (body) => {
+        setDialog(null);
+        void loadRecipes().then((data) => setSheet((data?.recipes ?? []).find((r) => r.ref === body.recipe?.ref) ?? body.recipe));
+        setToast(t(body.duplicate ? 'alreadyMine' : 'imported', { title: pickText(body.recipe?.title, lang) }));
+      };
+      /** Import the recipe a dropped or picked PNG carries. */
+      const importFile = (file, onError = (message) => setToast(message)) => {
+        if (!file || (file.type && file.type !== 'image/png')) {
+          onError(t('importNotPng'));
+          return;
+        }
+        Promise.resolve()
+          .then(() => file.arrayBuffer())
+          .then((buffer) => postJson(RECIPES_ROUTE, { action: 'import', png: bytesToBase64(buffer) }))
+          .then((body) => (body?.ok ? afterImport(body) : onError(t('importFailed', { reason: body?.reason ?? '' }))))
+          .catch(() => onError(t('actionFailed')));
+      };
+      const saveAsRecipe = (item) =>
+        postJson(RECIPES_ROUTE, { action: 'save-image', id: item.id })
+          .then((body) => {
+            if (!body?.ok) throw new Error(body?.reason);
+            void loadRecipes();
+            setToast({
+              text: t(body.duplicate ? 'alreadyMine' : 'savedMine'),
+              action: {
+                label: t('view'),
+                run: () => {
+                  setToast('');
+                  setTab('recipes');
+                  setSheet(body.recipe);
+                },
+              },
+            });
+          })
+          .catch(() => setToast(t('actionFailed')));
+      /** Put a picture made with a community recipe on its works wall: copy it, open the thread. */
+      const showOff = (item) =>
+        openRef(item.recipe.ref).then((recipe) => {
+          if (!recipe?.issue || !recipe.repo) return;
+          setSheet(null);
+          const url = `https://github.com/${recipe.repo}/issues/${recipe.issue}`;
+          Promise.resolve()
+            .then(() => copyImage(item.url))
+            .then(
+              () => setToast(t('showOffCopied')),
+              () => setToast(t('showOffManual')),
+            )
+            .finally(() => openExternal(url));
+        });
+      const galleryActions = (item) => [
+        { id: 'remix', run: () => setSheet(pictureRecipe(t, item)) },
+        { id: 'saveAsRecipe', run: () => void saveAsRecipe(item) },
+        ...(item.mediaType === 'image/png' ? [{ id: 'downloadWithRecipe', run: () => saveUrl(`${item.url}?download=1&recipe=1`, `${item.id}.png`) }] : []),
+        ...(isRemote(item.recipe?.ref) ? [{ id: 'showOff', run: () => void showOff(item) }] : []),
+      ];
+
       const remove = (item) => {
         setItems((list) => (list ?? []).filter((i) => i.id !== item.id));
         setTotal((n) => Math.max(0, n - 1));
@@ -1016,14 +1130,44 @@ window.__ModuleLoader__.load({
           },
         },
         h('span', { style: { fontSize: 15.5, fontWeight: 640, color: C.primary } }, t('title')),
-        h('span', { style: { fontSize: SMALL, color: C.faint } }, [total > 0 ? t('count', { n: total }) : null, fmtTotals(totals) ? t('spent', { amount: fmtTotals(totals) }) : null].filter(Boolean).join(' · ')),
+        h(
+          'span',
+          { role: 'tablist', style: { display: 'inline-flex', gap: 2, padding: 2, borderRadius: 9, border: `1px solid ${C.border1}`, alignSelf: 'center' } },
+          [
+            ['gallery', t('tabGallery')],
+            ['recipes', t('tabRecipes')],
+          ].map(([key, label]) =>
+            h(
+              'button',
+              {
+                key,
+                type: 'button',
+                role: 'tab',
+                'aria-selected': tab === key,
+                'data-dsh-images-tab': key,
+                onClick: () => setTab(key),
+                style: { font: 'inherit', fontSize: 12.5, fontWeight: tab === key ? 600 : 500, padding: '3px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', background: tab === key ? C.label : 'transparent', color: tab === key ? 'var(--dsw-alias-label-on-brand, #fff)' : C.muted },
+              },
+              label,
+            ),
+          ),
+        ),
+        tab === 'gallery'
+          ? h('span', { style: { fontSize: SMALL, color: C.faint } }, [total > 0 ? t('count', { n: total }) : null, fmtTotals(totals) ? t('spent', { amount: fmtTotals(totals) }) : null].filter(Boolean).join(' · '))
+          : h('span', { style: { fontSize: SMALL, color: C.faint } }, recipes?.recipes ? t('recipeCount', { n: recipes.recipes.length }) : ''),
         h('span', { style: { flex: 1 } }),
-        h(HeaderButton, { onClick: refresh }, t('refresh')),
-        h(HeaderButton, { onClick: () => setSettingsOpen(true), icon: h(GearIcon), 'data-dsh-images-settings-button': true }, t('settings')),
+        ...(tab === 'gallery'
+          ? [h(HeaderButton, { key: 'refresh', onClick: refresh }, t('refresh'))]
+          : [
+              h(HeaderButton, { key: 'import', onClick: () => setDialog('import'), 'data-dsh-images-import-button': true }, t('importRecipe')),
+              h(HeaderButton, { key: 'sources', onClick: () => setDialog('sources'), 'data-dsh-images-sources-button': true }, t('sources')),
+            ]),
+        h(HeaderButton, { key: 'settings', onClick: () => setSettingsOpen(true), icon: h(GearIcon), 'data-dsh-images-settings-button': true }, t('settings')),
       );
 
       let body;
-      if (failed) body = h('div', { style: { padding: 24, color: C.faint } }, t('unavailable'));
+      if (tab === 'recipes') body = h(RecipesView, { t, lang, data: recipes, failed: recipesFailed, onOpen: setSheet, onImportFile: (file) => importFile(file) });
+      else if (failed) body = h('div', { style: { padding: 24, color: C.faint } }, t('unavailable'));
       else if (items === null) body = h('div', { style: { padding: 24, color: C.faint } }, '…');
       else if (items.length === 0) body = h('div', { style: { padding: '48px 24px', color: C.muted, maxWidth: 520, lineHeight: 1.6 } }, t('empty'));
       else {
@@ -1039,9 +1183,22 @@ window.__ModuleLoader__.load({
                 item,
                 onOpen: (it) => box.open(items, it),
                 onDelete: remove,
+                extraActions: galleryActions(item),
                 caption: h(
                   'figcaption',
                   { style: { padding: '8px 10px 9px', fontSize: SMALL, lineHeight: 1.45 } },
+                  item.recipe?.ref && !String(item.recipe.ref).startsWith('image:')
+                    ? h(
+                        'button',
+                        {
+                          type: 'button',
+                          'data-dsh-images-tile-recipe': item.recipe.ref,
+                          onClick: () => void openRef(item.recipe.ref),
+                          style: { display: 'inline-block', maxWidth: '100%', marginBottom: 4, font: 'inherit', fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 6, border: 'none', background: C.layer3, color: C.label, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+                        },
+                        t('withRecipe', { title: pickText(item.recipe.title, lang) || item.recipe.ref }),
+                      )
+                    : null,
                   item.prompt
                     ? h('div', { title: item.prompt, style: { color: C.primary, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' } }, item.prompt)
                     : null,
@@ -1082,7 +1239,33 @@ window.__ModuleLoader__.load({
               },
             })
           : null,
-        toast ? h(PanelToast, { text: toast, onDone: () => setToast('') }) : null,
+        sheet
+          ? h(RecipeSheet, {
+              key: sheet.ref,
+              t,
+              lang,
+              recipe: sheet,
+              drafts,
+              onClose: () => setSheet(null),
+              onToast: setToast,
+              onChanged: (next) => {
+                void loadRecipes();
+                setSheet(next ?? null);
+                if (next && tab !== 'recipes') setTab('recipes');
+              },
+            })
+          : null,
+        dialog === 'import' ? h(ImportDrawer, { t, onClose: () => setDialog(null), onImported: afterImport, importFile }) : null,
+        dialog === 'sources' ? h(SourcesDrawer, { t, lang, data: recipes, onClose: () => setDialog(null), onData: setRecipes }) : null,
+        toast
+          ? h(PanelToast, {
+              text: typeof toast === 'string' ? toast : toast.text,
+              action: typeof toast === 'string' ? undefined : toast.action,
+              onDone: () => setToast(''),
+              // Over an open drawer, the notice floats above it.
+              style: sheet || dialog || settingsOpen ? { position: 'fixed', zIndex: 1600 } : undefined,
+            })
+          : null,
       );
     }
 
@@ -1755,7 +1938,7 @@ window.__ModuleLoader__.load({
     }
 
     /** The drawer's chrome: a dimmed panel behind, a sheet sliding in from the right. */
-    function DrawerFrame({ t, onClose, footer, children }) {
+    function DrawerFrame({ t, onClose, footer, children, title, width = 420 }) {
       const node = h(
         'div',
         { 'data-dsh-images-drawer': true, style: { position: 'fixed', inset: 0, zIndex: 1500, display: 'flex', justifyContent: 'flex-end' } },
@@ -1766,10 +1949,10 @@ window.__ModuleLoader__.load({
           {
             role: 'dialog',
             'aria-modal': true,
-            'aria-label': t('settingsTitle'),
+            'aria-label': title ?? t('settingsTitle'),
             style: {
               position: 'relative',
-              width: 'min(420px, 100vw)',
+              width: `min(${width}px, 100vw)`,
               height: '100%',
               display: 'flex',
               flexDirection: 'column',
@@ -1785,7 +1968,7 @@ window.__ModuleLoader__.load({
             'div',
             { style: { display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px 12px', borderBottom: `1px solid ${C.border1}` } },
             h(ImagesGlyph, { size: 16, active: true }),
-            h('span', { style: { fontSize: 15, fontWeight: 640 } }, t('settingsTitle')),
+            h('span', { style: { fontSize: 15, fontWeight: 640, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, title ?? t('settingsTitle')),
             h('span', { style: { flex: 1 } }),
             h('button', { type: 'button', 'aria-label': t('close'), onClick: onClose, style: { display: 'inline-flex', width: 28, height: 28, alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 8, background: 'transparent', color: C.muted, cursor: 'pointer' } }, h(CloseIcon, { size: 16 })),
           ),
@@ -1794,6 +1977,846 @@ window.__ModuleLoader__.load({
         ),
       );
       return ReactDOM && typeof ReactDOM.createPortal === 'function' && typeof document !== 'undefined' ? ReactDOM.createPortal(node, document.body) : node;
+    }
+
+    // --- recipes ---------------------------------------------------------------------
+    //
+    // A recipe (玩法) is a tested prompt template with blanks. The Recipes tab lists
+    // the built-in ones, the user's own and the community's; opening one shows a
+    // sheet to fill its blanks and start a conversation with it, or to pass it on.
+
+    const CATEGORY_ORDER = ['photo', 'handdrawn', 'editorial', 'infographic', '3d', 'sticker', 'illustration', 'product', 'comic'];
+    /** A placeholder cover per category: gradient from, to, and the ink on it. */
+    const CATEGORY_TINT = {
+      photo: ['#ffb88c', '#de6262', '#ffffff'],
+      handdrawn: ['#f6ead0', '#dcc39a', '#3b2f20'],
+      editorial: ['#2b2d31', '#5b6470', '#ffffff'],
+      infographic: ['#a1c4fd', '#c2e9fb', '#16324f'],
+      '3d': ['#c471f5', '#fa71cd', '#ffffff'],
+      sticker: ['#f6d365', '#fda085', '#4a2a10'],
+      illustration: ['#84fab0', '#8fd3f4', '#103a33'],
+      product: ['#e0c3fc', '#8ec5fc', '#1f2a4a'],
+      comic: ['#ffecd2', '#fcb69f', '#4a2a1a'],
+    };
+    const tintOf = (category) => CATEGORY_TINT[category] ?? CATEGORY_TINT.illustration;
+    const COMMUNITY_HOME = 'https://github.com/kadaliao/dsh-images-recipes';
+    const TAB_KEY = 'dsh-images:tab';
+    const SLOT_RE = /\{\{\s*([A-Za-z][A-Za-z0-9_]{0,31})\s*\}\}/g;
+
+    /** The text for `lang` of a `{zh, en}` pair, else the other one. */
+    function pickText(text, lang) {
+      if (typeof text === 'string') return text;
+      if (!text || typeof text !== 'object') return '';
+      const want = String(lang ?? '').startsWith('zh') ? 'zh' : 'en';
+      return text[want] ?? text[want === 'zh' ? 'en' : 'zh'] ?? '';
+    }
+    const ratioOf = (size) => (size === '1536x1024' ? '3 / 2' : size === '1024x1536' ? '2 / 3' : '1 / 1');
+    /** `github:ana` as `@ana`; any other author as written. */
+    const authorName = (author) => String(author ?? '').replace(/^github:/, '@');
+    const isRemote = (ref) => typeof ref === 'string' && ref !== '' && !/^(builtin|mine|image):/.test(ref);
+    const slotNames = (prompt) => {
+      const names = [];
+      for (const m of String(prompt ?? '').matchAll(SLOT_RE)) if (!names.includes(m[1])) names.push(m[1]);
+      return names;
+    };
+
+    function openExternal(url) {
+      try {
+        if (typeof window !== 'undefined' && typeof window.open === 'function') window.open(url, '_blank', 'noopener');
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    function bytesToBase64(buffer) {
+      const bytes = new Uint8Array(buffer);
+      let s = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return btoa(s);
+    }
+    function base64ToBlob(b64, type) {
+      const bin = atob(b64);
+      const out = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i += 1) out[i] = bin.charCodeAt(i);
+      return new Blob([out], { type });
+    }
+    function saveBlob(blob, name) {
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      } catch {
+        // Nothing to do without a document.
+      }
+    }
+    /** Save a URL the page can reach through the browser's download flow. */
+    function saveUrl(url, name) {
+      try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch {
+        // Nothing to do without a document.
+      }
+    }
+    function loadImageEl(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('image'));
+        img.src = src;
+      });
+    }
+    /** Put a picture on the clipboard as a PNG (a GIF goes as its first frame). */
+    async function copyImage(url) {
+      const res = await fetch(url, { credentials: 'same-origin' });
+      let blob = await res.blob();
+      if (blob.type !== 'image/png') {
+        const img = await loadImageEl(url);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        blob = await new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('png'))), 'image/png'));
+      }
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    }
+
+    /** Lay `text` out in at most `maxLines` lines of `width`, ending in … when cut; returns the next y. */
+    function wrapText(g, text, x, y, width, lineHeight, maxLines) {
+      const tokens = String(text ?? '').match(/[⺀-鿿＀-￯]|[^\s⺀-鿿＀-￯]+\s*|\s+/g) ?? [];
+      const lines = [];
+      let line = '';
+      for (const token of tokens) {
+        const next = line + token;
+        if (g.measureText(next.trimEnd()).width > width && line !== '') {
+          lines.push(line.trimEnd());
+          line = token.trimStart();
+        } else line = next;
+      }
+      if (line.trim() !== '') lines.push(line.trimEnd());
+      const shown = lines.slice(0, maxLines);
+      if (lines.length > maxLines) {
+        let last = shown[maxLines - 1];
+        while (last.length > 1 && g.measureText(`${last}…`).width > width) last = last.slice(0, -1);
+        shown[maxLines - 1] = `${last}…`;
+      }
+      for (const l of shown) {
+        g.fillText(l, x, y);
+        y += lineHeight;
+      }
+      return y;
+    }
+
+    /** The recipe's share card: its cover, title and summary, and how to use it. A PNG blob. */
+    async function renderCard(t, lang, recipe) {
+      const W = 1080;
+      const H = 1440;
+      const M = 64;
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const g = canvas.getContext('2d');
+      const font = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif';
+      g.fillStyle = '#f6f4ef';
+      g.fillRect(0, 0, W, H);
+      const box = { x: M, y: M, w: W - 2 * M, h: 940 };
+      g.save();
+      g.beginPath();
+      if (typeof g.roundRect === 'function') g.roundRect(box.x, box.y, box.w, box.h, 28);
+      else g.rect(box.x, box.y, box.w, box.h);
+      g.clip();
+      let drawn = false;
+      if (recipe.coverUrl) {
+        try {
+          const img = await loadImageEl(recipe.coverUrl);
+          const scale = Math.max(box.w / img.naturalWidth, box.h / img.naturalHeight);
+          const w = img.naturalWidth * scale;
+          const hh = img.naturalHeight * scale;
+          g.drawImage(img, box.x + (box.w - w) / 2, box.y + (box.h - hh) / 2, w, hh);
+          drawn = true;
+        } catch {
+          drawn = false;
+        }
+      }
+      if (!drawn) {
+        const [from, to, ink] = tintOf(recipe.category);
+        const grad = g.createLinearGradient(box.x, box.y, box.x + box.w, box.y + box.h);
+        grad.addColorStop(0, from);
+        grad.addColorStop(1, to);
+        g.fillStyle = grad;
+        g.fillRect(box.x, box.y, box.w, box.h);
+        g.fillStyle = ink;
+        g.font = `700 76px ${font}`;
+        wrapText(g, pickText(recipe.title, lang), box.x + 56, box.y + box.h - 200, box.w - 112, 92, 2);
+      }
+      g.restore();
+      let y = box.y + box.h + 96;
+      g.fillStyle = '#1d1d1f';
+      g.font = `700 58px ${font}`;
+      y = wrapText(g, pickText(recipe.title, lang), M, y, W - 2 * M, 72, 2);
+      g.fillStyle = '#55555a';
+      g.font = `400 34px ${font}`;
+      wrapText(g, pickText(recipe.summary, lang), M, y + 6, W - 2 * M, 48, 2);
+      g.fillStyle = '#8a8a90';
+      g.font = `500 26px ${font}`;
+      const credit = recipe.source?.repo ? t('cardCredit', { repo: recipe.source.repo }) : recipe.author ? t('cardBy', { author: authorName(recipe.author) }) : '';
+      if (credit) g.fillText(credit, M, H - 112);
+      g.fillText(t('cardFooter'), M, H - 66);
+      return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('png'))), 'image/png'));
+    }
+
+    /** The message a recipe starts a conversation with: which recipe, the blanks filled, the extra wish. */
+    function draftMessage(t, lang, recipe, values, extra) {
+      const lines = [recipe.origin === 'image' ? t('draftRemix', { ref: recipe.ref }) : t('draftUse', { title: pickText(recipe.title, lang), ref: recipe.ref })];
+      for (const slot of recipe.slots ?? []) {
+        const v = String(values?.[slot.name] ?? '').trim();
+        if (v !== '') lines.push(`${pickText(slot.label, lang)}${t('colon')}${v}`);
+      }
+      if (String(extra ?? '').trim() !== '') lines.push(t(recipe.origin === 'image' ? 'draftChange' : 'draftExtra', { text: String(extra).trim() }));
+      if ((recipe.inputs ?? []).length > 0) lines.push(t('draftAttach', { list: recipe.inputs.map((i) => pickText(i.label, lang)).join(t('listSep')) }));
+      return lines.join('\n');
+    }
+
+    /** A gallery picture as the recipe it stands for, for the sheet: "make one like this". */
+    function pictureRecipe(t, item) {
+      const inputs = Math.max(0, Number(item.inputs) || 0);
+      return {
+        ref: `image:${item.id}`,
+        origin: 'image',
+        id: `image-${item.id}`,
+        title: { en: t('remixTitle'), zh: t('remixTitle') },
+        summary: {},
+        category: item.animation ? 'sticker' : inputs > 0 ? 'photo' : 'illustration',
+        tags: [],
+        inputs: Array.from({ length: inputs }, (_, i) => ({ name: `image${i + 1}`, label: { en: t('inputN', { n: i + 1 }), zh: t('inputN', { n: i + 1 }) } })),
+        slots: [],
+        prompt: item.prompt ?? '',
+        params: { ...(item.size ? { size: item.size } : {}), ...(item.animation?.frames ? { frames: item.animation.frames } : {}) },
+        coverUrl: item.url,
+        image: item.id,
+        mediaType: item.mediaType,
+      };
+    }
+
+    function Chip({ active, onClick, children, ...rest }) {
+      return h(
+        'button',
+        {
+          type: 'button',
+          onClick,
+          ...rest,
+          style: {
+            flex: 'none',
+            font: 'inherit',
+            fontSize: 12,
+            padding: '4px 11px',
+            borderRadius: 999,
+            cursor: 'pointer',
+            border: `1px solid ${active ? 'transparent' : C.border1}`,
+            background: active ? C.label : 'transparent',
+            color: active ? 'var(--dsw-alias-label-on-brand, #fff)' : C.muted,
+            whiteSpace: 'nowrap',
+          },
+        },
+        children,
+      );
+    }
+
+    function Badge({ children, tone = 'dark' }) {
+      return h(
+        'span',
+        { style: { fontSize: 10.5, fontWeight: 600, padding: '2px 7px', borderRadius: 6, background: tone === 'dark' ? 'rgba(0,0,0,.55)' : C.layer3, color: tone === 'dark' ? '#fff' : C.muted, backdropFilter: 'blur(6px)', lineHeight: 1.5, whiteSpace: 'nowrap' } },
+        children,
+      );
+    }
+
+    /** A recipe's cover: its picture, or a gradient of its category with its title. */
+    function RecipeCover({ recipe, lang, big = false, fit = 'cover' }) {
+      const [broken, setBroken] = useState(false);
+      const [from, to, ink] = tintOf(recipe.category);
+      if (recipe.coverUrl && !broken) {
+        return h('img', {
+          src: recipe.coverUrl,
+          alt: pickText(recipe.title, lang),
+          loading: 'lazy',
+          decoding: 'async',
+          draggable: false,
+          onError: () => setBroken(true),
+          style: { display: 'block', width: '100%', height: '100%', objectFit: fit, background: C.layer2 },
+        });
+      }
+      return h(
+        'div',
+        {
+          'data-dsh-images-cover-placeholder': true,
+          style: { width: '100%', height: '100%', minHeight: big ? 200 : undefined, background: `linear-gradient(135deg, ${from}, ${to})`, color: ink, display: 'flex', alignItems: 'flex-end', padding: big ? 22 : 14, boxSizing: 'border-box', fontWeight: 700, fontSize: big ? 24 : 17, lineHeight: 1.3 },
+        },
+        pickText(recipe.title, lang),
+      );
+    }
+
+    function RecipeCard({ t, lang, recipe, onOpen }) {
+      const badges = [];
+      if ((recipe.inputs ?? []).length > 0) badges.push(h(Badge, { key: 'in' }, t('badgePhoto')));
+      if (recipe.params?.frames) badges.push(h(Badge, { key: 'gif' }, 'GIF'));
+      if (recipe.origin === 'mine') badges.push(h(Badge, { key: 'mine' }, t('originMine')));
+      else if (isRemote(recipe.ref)) badges.push(h(Badge, { key: 'com' }, t('originCommunity')));
+      const meta = [
+        recipe.stats?.votes ? t('votes', { n: recipe.stats.votes }) : null,
+        recipe.uses ? t('usedTimes', { n: recipe.uses }) : null,
+        recipe.author && isRemote(recipe.ref) ? authorName(recipe.author) : null,
+      ].filter(Boolean);
+      return h(
+        'figure',
+        {
+          'data-dsh-images-recipe': recipe.ref,
+          role: 'button',
+          tabIndex: 0,
+          onClick: () => onOpen(recipe),
+          onKeyDown: (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onOpen(recipe);
+            }
+          },
+          style: { position: 'relative', margin: 0, borderRadius: 12, overflow: 'hidden', background: C.layer2, border: `1px solid ${C.border1}`, cursor: 'pointer' },
+        },
+        h(
+          'div',
+          { style: { position: 'relative', aspectRatio: ratioOf(recipe.params?.size), lineHeight: 0, overflow: 'hidden' } },
+          h(RecipeCover, { recipe, lang }),
+          badges.length > 0 ? h('div', { style: { position: 'absolute', top: 8, left: 8, display: 'flex', gap: 5, lineHeight: 1 } }, badges) : null,
+        ),
+        h(
+          'figcaption',
+          { style: { padding: '8px 10px 10px', fontSize: SMALL, lineHeight: 1.45 } },
+          h('div', { style: { color: C.primary, fontWeight: 600 } }, pickText(recipe.title, lang)),
+          pickText(recipe.summary, lang)
+            ? h('div', { style: { marginTop: 2, color: C.muted, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' } }, pickText(recipe.summary, lang))
+            : null,
+          meta.length > 0 ? h('div', { style: { marginTop: 3, color: C.faint, fontSize: 11.5 } }, meta.join(' · ')) : null,
+        ),
+      );
+    }
+
+    /** Sort for the "all" view: the user's own first (newest first), the built-in ones, then the community's by votes. */
+    function orderRecipes(list) {
+      const rank = (r) => (r.origin === 'mine' ? 0 : r.origin === 'builtin' ? 1 : 2);
+      return list
+        .map((r, i) => ({ r, i }))
+        .sort((a, b) => rank(a.r) - rank(b.r) || (a.r.origin === 'mine' ? (b.r.createdAt ?? 0) - (a.r.createdAt ?? 0) : 0) || (rank(a.r) === 2 ? (b.r.stats?.votes ?? 0) - (a.r.stats?.votes ?? 0) : 0) || a.i - b.i)
+        .map((x) => x.r);
+    }
+
+    function matches(recipe, query) {
+      const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+      if (terms.length === 0) return true;
+      const hay = [recipe.title?.zh, recipe.title?.en, recipe.summary?.zh, recipe.summary?.en, ...(recipe.tags ?? []), recipe.category, recipe.author, recipe.source?.repo].filter(Boolean).join(' ').toLowerCase();
+      return terms.every((term) => hay.includes(term));
+    }
+
+    /** The Recipes tab: search, filters and the grid of cards. */
+    function RecipesView({ t, lang, data, failed, onOpen, onImportFile }) {
+      const [query, setQuery] = useState('');
+      const [category, setCategory] = useState('');
+      const [origin, setOrigin] = useState('');
+      const [dragging, setDragging] = useState(false);
+      if (failed) return h('div', { style: { padding: 24, color: C.faint } }, t('recipesUnavailable'));
+      if (data === null) return h('div', { style: { padding: 24, color: C.faint } }, '…');
+      const all = Array.isArray(data.recipes) ? data.recipes : [];
+      const remoteSources = (data.sources ?? []).filter((s) => s.kind === 'remote');
+      const origins = [
+        ['', t('originAll')],
+        ['builtin', t('originBuiltin')],
+        ['mine', t('originMine')],
+        ...(remoteSources.length > 0 ? [['remote', t('originCommunity')]] : []),
+      ];
+      const byOrigin = all.filter((r) => origin === '' || (origin === 'remote' ? isRemote(r.ref) : r.origin === origin));
+      const present = CATEGORY_ORDER.filter((c) => byOrigin.some((r) => r.category === c));
+      const shown = orderRecipes(byOrigin.filter((r) => (category === '' || r.category === category) && matches(r, query)));
+
+      let empty = null;
+      if (shown.length === 0) {
+        if (query !== '' || category !== '') empty = t('recipesNoMatch');
+        else if (origin === 'mine') empty = t('mineEmpty');
+        else if (origin === 'remote') {
+          const broken = remoteSources.find((s) => s.error);
+          empty = broken && !remoteSources.some((s) => s.count > 0) ? t('communityUnreachable', { reason: broken.error }) : t('communityEmpty');
+        } else empty = t('recipesEmpty');
+      }
+
+      const filters = h(
+        'div',
+        { style: { display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 24px 4px' } },
+        h(
+          'div',
+          { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
+          h('input', {
+            type: 'search',
+            value: query,
+            placeholder: t('recipeSearch'),
+            'aria-label': t('recipeSearch'),
+            onChange: (e) => setQuery(e.target.value),
+            style: { ...inputStyle, width: 'min(280px, 100%)', padding: '6px 11px', fontSize: 12.5 },
+          }),
+          h('span', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } }, origins.map(([key, label]) => h(Chip, { key: key || 'all', active: origin === key, onClick: () => setOrigin(key), 'data-dsh-images-origin': key || 'all' }, label))),
+        ),
+        present.length > 1
+          ? h(
+              'div',
+              { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+              h(Chip, { active: category === '', onClick: () => setCategory('') }, t('catAll')),
+              present.map((c) => h(Chip, { key: c, active: category === c, onClick: () => setCategory(category === c ? '' : c), 'data-dsh-images-category': c }, t(`cat_${c}`))),
+            )
+          : null,
+      );
+
+      return h(
+        'div',
+        {
+          'data-dsh-images-recipes': true,
+          onDragOver: (e) => {
+            if (e.dataTransfer && [...(e.dataTransfer.types ?? [])].includes('Files')) {
+              e.preventDefault();
+              if (!dragging) setDragging(true);
+            }
+          },
+          onDragLeave: () => setDragging(false),
+          onDrop: (e) => {
+            const file = e.dataTransfer?.files?.[0];
+            setDragging(false);
+            if (!file) return;
+            e.preventDefault();
+            onImportFile(file);
+          },
+          style: { position: 'relative', minHeight: '60%', outline: dragging ? `2px dashed ${C.label}` : 'none', outlineOffset: -8, borderRadius: 12 },
+        },
+        filters,
+        empty
+          ? h('div', { style: { padding: '36px 24px', color: C.muted, maxWidth: 560, lineHeight: 1.6 } }, empty)
+          : h(
+              'div',
+              { 'data-dsh-images-recipe-grid': true, style: { padding: '12px 24px 60px', columnWidth: 210, columnGap: 14 } },
+              shown.map((r) => h('div', { key: r.ref, style: { breakInside: 'avoid', marginBottom: 14 } }, h(RecipeCard, { t, lang, recipe: r, onOpen }))),
+            ),
+      );
+    }
+
+    const subtleLink = { font: 'inherit', fontSize: 12, color: C.label, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 };
+
+    /** Escape closes the drawer that calls this (the settings drawer handles its own). */
+    function useEscape(onClose) {
+      const closeRef = useRef(onClose);
+      closeRef.current = onClose;
+      useEffect(() => {
+        if (typeof document === 'undefined') return undefined;
+        const key = (e) => {
+          if (e.key === 'Escape' && !e.defaultPrevented) closeRef.current();
+        };
+        document.addEventListener('keydown', key);
+        return () => document.removeEventListener('keydown', key);
+      }, []);
+    }
+
+    /**
+     * One recipe: fill its blanks and start a conversation with it, or pass it on —
+     * a recipe code, a share card, the community. The user's own can be edited.
+     */
+    function RecipeSheet({ t, lang, recipe, drafts, onClose, onToast, onChanged }) {
+      useEscape(onClose);
+      const [values, setValues] = useState({});
+      const [extra, setExtra] = useState('');
+      const [showPrompt, setShowPrompt] = useState(false);
+      const [share, setShare] = useState(null);
+      const [editing, setEditing] = useState(null);
+      const [confirmDelete, setConfirmDelete] = useState(false);
+      const [busy, setBusy] = useState('');
+      const mine = recipe.origin === 'mine';
+      const picture = recipe.origin === 'image';
+      const remote = isRemote(recipe.ref);
+      const title = pickText(recipe.title, lang);
+
+      const start = () => {
+        const text = draftMessage(t, lang, recipe, values, extra);
+        if (drafts?.start?.(text)) {
+          onToast(t((recipe.inputs ?? []).length > 0 ? 'draftStartedAttach' : 'draftStarted'));
+          onClose();
+        } else {
+          copyText(text);
+          onToast(t('draftCopied'));
+        }
+      };
+      const run = (key, job) => {
+        if (busy) return;
+        setBusy(key);
+        Promise.resolve()
+          .then(job)
+          .catch(() => onToast(t('actionFailed')))
+          .finally(() => setBusy(''));
+      };
+      const copyCode = () =>
+        run('code', async () => {
+          const body = await postJson(RECIPES_ROUTE, { action: 'export', ref: recipe.ref, lang });
+          if (!body?.ok) throw new Error(body?.reason);
+          copyText(body.text);
+          onToast(t('codeCopied'));
+        });
+      const card = () =>
+        run('card', async () => {
+          const blob = await renderCard(t, lang, recipe);
+          const body = await postJson(RECIPES_ROUTE, { action: 'card', ref: recipe.ref, png: bytesToBase64(await blob.arrayBuffer()) });
+          if (!body?.ok) throw new Error(body?.reason);
+          saveBlob(base64ToBlob(body.png, 'image/png'), `${recipe.id || 'recipe'}-card.png`);
+          onToast(t('cardSaved'));
+        });
+      const prepareShare = () =>
+        run('share', async () => {
+          const body = await postJson(RECIPES_ROUTE, { action: 'submit', ref: recipe.ref, lang });
+          if (!body?.ok) throw new Error(body?.reason);
+          setShare(body);
+        });
+      const save = () =>
+        run('save', async () => {
+          const body = await postJson(RECIPES_ROUTE, picture ? { action: 'save-image', id: recipe.image } : { action: 'copy', ref: recipe.ref });
+          if (!body?.ok) throw new Error(body?.reason);
+          onToast(t(body.duplicate ? 'alreadyMine' : 'savedMine'));
+          onChanged(body.recipe);
+        });
+      const remove = () =>
+        run('delete', async () => {
+          const body = await postJson(RECIPES_ROUTE, { action: 'delete', ref: recipe.ref });
+          if (!body?.ok) throw new Error(body?.reason);
+          onToast(t('recipeDeleted'));
+          onChanged(null);
+        });
+      const saveEdit = () =>
+        run('edit', async () => {
+          const names = slotNames(editing.prompt);
+          const patch = {
+            title: { ...recipe.title, [lang.startsWith('zh') ? 'zh' : 'en']: editing.title },
+            summary: { ...recipe.summary, [lang.startsWith('zh') ? 'zh' : 'en']: editing.summary },
+            category: editing.category,
+            prompt: editing.prompt,
+            params: { ...recipe.params, size: editing.size },
+            slots: names.map((name) => ({ name, label: editing.labels[name] ? { [lang.startsWith('zh') ? 'zh' : 'en']: editing.labels[name] } : { en: name }, default: editing.defaults[name] ?? '' })),
+          };
+          const body = await postJson(RECIPES_ROUTE, { action: 'update', ref: recipe.ref, patch });
+          if (!body?.ok) {
+            onToast(t('editFailed', { reason: body?.reason ?? '' }));
+            return;
+          }
+          setEditing(null);
+          onToast(t('recipeSaved'));
+          onChanged(body.recipe);
+        });
+      const beginEdit = () =>
+        setEditing({
+          title: title,
+          summary: pickText(recipe.summary, lang),
+          category: recipe.category,
+          size: recipe.params?.size ?? '1024x1024',
+          prompt: recipe.prompt,
+          labels: Object.fromEntries((recipe.slots ?? []).map((s) => [s.name, pickText(s.label, lang)])),
+          defaults: Object.fromEntries((recipe.slots ?? []).map((s) => [s.name, s.default ?? ''])),
+        });
+
+      const meta = [
+        t(`cat_${recipe.category}`),
+        recipe.params?.size && recipe.params.size !== 'auto' ? recipe.params.size.replace('x', '×') : null,
+        recipe.params?.frames ? `GIF · ${t('frames', { n: recipe.params.frames })}` : null,
+        recipe.uses ? t('usedTimes', { n: recipe.uses }) : null,
+        Array.isArray(recipe.tested) && recipe.tested.length > 0 ? t('testedWith', { models: recipe.tested.join(', ') }) : null,
+      ].filter(Boolean);
+
+      const credit = [];
+      if (recipe.source?.repo || recipe.source?.author) {
+        credit.push(
+          h(
+            'div',
+            { key: 'src', style: hintStyle },
+            t('creditFrom'),
+            recipe.source.url ? h('button', { type: 'button', style: subtleLink, onClick: () => openExternal(recipe.source.url) }, recipe.source.repo || recipe.source.url) : recipe.source.repo,
+            recipe.source.author ? ` · ${recipe.source.author}` : '',
+            recipe.source.license ? ` · ${recipe.source.license}` : '',
+          ),
+        );
+      }
+      if (remote) {
+        const issueUrl = recipe.issue && recipe.repo ? `https://github.com/${recipe.repo}/issues/${recipe.issue}` : null;
+        credit.push(
+          h(
+            'div',
+            { key: 'com', style: { ...hintStyle, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' } },
+            recipe.author ? h('span', null, t('sharedBy', { author: authorName(recipe.author) })) : null,
+            recipe.stats?.votes ? h('span', null, t('votes', { n: recipe.stats.votes })) : null,
+            issueUrl ? h('button', { type: 'button', style: subtleLink, onClick: () => openExternal(issueUrl) }, t('worksWall', { n: recipe.stats?.works ?? 0 })) : null,
+          ),
+        );
+      }
+
+      let body;
+      if (editing) {
+        const names = slotNames(editing.prompt);
+        const set = (patch) => setEditing((e) => ({ ...e, ...patch }));
+        body = [
+          h('label', { key: 'title', style: field }, h('span', { style: labelStyle }, t('editTitle')), h('input', { value: editing.title, onChange: (e) => set({ title: e.target.value }), style: inputStyle })),
+          h('label', { key: 'summary', style: field }, h('span', { style: labelStyle }, t('editSummary')), h('input', { value: editing.summary, onChange: (e) => set({ summary: e.target.value }), style: inputStyle })),
+          h(
+            'div',
+            { key: 'row', style: { display: 'flex', gap: 10 } },
+            h('label', { style: { ...field, flex: 1 } }, h('span', { style: labelStyle }, t('editCategory')), h('select', { value: editing.category, onChange: (e) => set({ category: e.target.value }), style: inputStyle }, CATEGORY_ORDER.map((c) => h('option', { key: c, value: c }, t(`cat_${c}`))))),
+            h('label', { style: { ...field, flex: 1 } }, h('span', { style: labelStyle }, t('size')), h('select', { value: editing.size, onChange: (e) => set({ size: e.target.value }), style: inputStyle }, ['1024x1024', '1536x1024', '1024x1536', 'auto'].map((sz) => h('option', { key: sz, value: sz }, sz === 'auto' ? t('auto') : sz.replace('x', '×'))))),
+          ),
+          h(
+            'label',
+            { key: 'prompt', style: field },
+            h('span', { style: labelStyle }, t('editPrompt')),
+            h('textarea', { value: editing.prompt, rows: 9, onChange: (e) => set({ prompt: e.target.value }), style: { ...inputStyle, resize: 'vertical', fontSize: 12.5, lineHeight: 1.5 } }),
+            h('span', { style: hintStyle }, t('editPromptHint')),
+          ),
+          ...names.map((name) =>
+            h(
+              'div',
+              { key: `slot-${name}`, style: { display: 'flex', gap: 8, alignItems: 'flex-end' } },
+              h('label', { style: { ...field, flex: 1 } }, h('span', { style: labelStyle }, t('editSlotLabel', { name })), h('input', { value: editing.labels[name] ?? '', placeholder: name, onChange: (e) => set({ labels: { ...editing.labels, [name]: e.target.value } }), style: inputStyle })),
+              h('label', { style: { ...field, flex: 2 } }, h('span', { style: labelStyle }, t('editSlotDefault')), h('input', { value: editing.defaults[name] ?? '', onChange: (e) => set({ defaults: { ...editing.defaults, [name]: e.target.value } }), style: inputStyle })),
+            ),
+          ),
+        ];
+      } else if (share) {
+        const p = share.recipe ?? {};
+        body = [
+          h('div', { key: 'note', style: { fontSize: 13, lineHeight: 1.6 } }, t('shareIntro')),
+          h(
+            'div',
+            { key: 'preview', 'data-dsh-images-share-preview': true, style: { border: `1px solid ${C.border1}`, borderRadius: 10, padding: '10px 12px', background: C.layer1, fontSize: 12.5, lineHeight: 1.55, display: 'flex', flexDirection: 'column', gap: 4 } },
+            h('div', null, h('b', null, t('editTitle')), t('colon'), [p.title?.zh, p.title?.en].filter(Boolean).join(' / ')),
+            pickText(p.summary, lang) ? h('div', null, h('b', null, t('editSummary')), t('colon'), pickText(p.summary, lang)) : null,
+            h('div', null, h('b', null, t('editCategory')), t('colon'), t(`cat_${p.category}`), p.params?.size ? ` · ${p.params.size}` : '', p.params?.frames ? ` · GIF ${p.params.frames}` : ''),
+            h('div', { style: { whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 180, overflowY: 'auto', color: C.muted } }, p.prompt),
+          ),
+          h('div', { key: 'private', style: hintStyle }, t('sharePrivacy')),
+          h('div', { key: 'cover', style: hintStyle }, t(recipe.coverUrl ? 'shareCover' : 'shareNoCover')),
+        ];
+      } else {
+        body = [
+          h('div', { key: 'cover', style: { borderRadius: 12, overflow: 'hidden', maxHeight: 340, aspectRatio: ratioOf(recipe.params?.size), background: C.layer2, lineHeight: 0 } }, h(RecipeCover, { recipe, lang, big: true, fit: 'cover' })),
+          h(
+            'div',
+            { key: 'head', style: { display: 'flex', flexDirection: 'column', gap: 4 } },
+            pickText(recipe.summary, lang) ? h('div', { style: { fontSize: 13.5, lineHeight: 1.55 } }, pickText(recipe.summary, lang)) : null,
+            h('div', { style: { fontSize: 12, color: C.faint } }, meta.join(' · ')),
+            ...credit,
+          ),
+          (recipe.inputs ?? []).length > 0
+            ? h(
+                'div',
+                { key: 'inputs', 'data-dsh-images-needs': true, style: { fontSize: 12.5, lineHeight: 1.55, padding: '9px 12px', borderRadius: 10, background: C.layer2, color: C.primary } },
+                h('div', { style: { fontWeight: 600 } }, t('needsInputs', { n: recipe.inputs.length })),
+                h('div', { style: { color: C.muted } }, recipe.inputs.map((i) => pickText(i.label, lang)).join(t('listSep'))),
+                h('div', { style: { ...hintStyle, marginTop: 2 } }, t('needsInputsHint')),
+              )
+            : null,
+          ...(recipe.slots ?? []).map((slot) =>
+            h(
+              'label',
+              { key: `slot-${slot.name}`, style: field },
+              h('span', { style: labelStyle }, pickText(slot.label, lang)),
+              h('input', {
+                value: values[slot.name] ?? '',
+                placeholder: slot.default ? t('slotDefault', { value: slot.default }) : '',
+                onChange: (e) => setValues((v) => ({ ...v, [slot.name]: e.target.value })),
+                'data-dsh-images-slot': slot.name,
+                style: inputStyle,
+              }),
+            ),
+          ),
+          h(
+            'label',
+            { key: 'extra', style: field },
+            h('span', { style: labelStyle }, t(picture ? 'remixChange' : 'extraWish')),
+            h('textarea', { value: extra, rows: 2, placeholder: t(picture ? 'remixChangeHint' : 'extraWishHint'), onChange: (e) => setExtra(e.target.value), 'data-dsh-images-extra': true, style: { ...inputStyle, resize: 'vertical', lineHeight: 1.5 } }),
+          ),
+          h(
+            'div',
+            { key: 'prompt', style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+            h('div', { style: { display: 'flex', gap: 12 } }, h('button', { type: 'button', style: subtleLink, onClick: () => setShowPrompt((v) => !v) }, t(showPrompt ? 'hidePrompt' : 'showPrompt')), showPrompt ? h('button', { type: 'button', style: subtleLink, onClick: () => copyText(recipe.prompt) }, t('copyPrompt')) : null),
+            showPrompt ? h('div', { style: { fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: C.muted, background: C.layer1, border: `1px solid ${C.border1}`, borderRadius: 9, padding: '9px 11px', maxHeight: 260, overflowY: 'auto', userSelect: 'text' } }, recipe.prompt) : null,
+          ),
+        ];
+      }
+
+      let footer;
+      if (editing) {
+        footer = h('div', { style: { display: 'flex', gap: 8, justifyContent: 'flex-end' } }, h(DrawerButton, { onClick: () => setEditing(null) }, t('cancel')), h(DrawerButton, { primary: true, disabled: busy !== '', onClick: saveEdit }, t('save')));
+      } else if (share) {
+        footer = h(
+          'div',
+          { style: { display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' } },
+          h(DrawerButton, { onClick: () => setShare(null) }, t('back')),
+          recipe.coverUrl ? h(DrawerButton, { onClick: () => saveUrl(recipe.coverUrl, `${recipe.id || 'recipe'}-cover`) }, t('downloadCover')) : null,
+          h(
+            DrawerButton,
+            {
+              primary: true,
+              'data-dsh-images-open-github': true,
+              onClick: () => {
+                openExternal(share.url);
+                setShare(null);
+                onToast(t('shareOpened'));
+              },
+            },
+            t('openGitHub'),
+          ),
+        );
+      } else {
+        const secondary = [
+          h(DrawerButton, { key: 'code', onClick: copyCode, disabled: busy !== '', 'data-dsh-images-copy-code': true }, t('copyCode')),
+          h(DrawerButton, { key: 'card', onClick: card, disabled: busy !== '' }, busy === 'card' ? '…' : t('shareCard')),
+          ...(mine || picture ? [h(DrawerButton, { key: 'share', onClick: prepareShare, disabled: busy !== '', 'data-dsh-images-share': true }, t('shareCommunity'))] : []),
+          ...(!mine ? [h(DrawerButton, { key: 'save', onClick: save, disabled: busy !== '', 'data-dsh-images-save-recipe': true }, t(picture ? 'saveAsRecipe' : 'saveToMine'))] : []),
+          ...(mine ? [h(DrawerButton, { key: 'edit', onClick: beginEdit }, t('edit'))] : []),
+          ...(mine
+            ? [
+                h(
+                  'button',
+                  {
+                    key: 'del',
+                    type: 'button',
+                    onClick: () => (confirmDelete ? remove() : setConfirmDelete(true)),
+                    style: { font: 'inherit', fontSize: 13, padding: '7px 10px', border: 'none', background: 'transparent', color: C.error, cursor: 'pointer' },
+                  },
+                  t(confirmDelete ? 'confirmDelete' : 'deleteRecipe'),
+                ),
+              ]
+            : []),
+        ];
+        footer = h(
+          'div',
+          { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+          h(DrawerButton, { primary: true, onClick: start, 'data-dsh-images-start': true }, t(drafts?.available?.() ? 'startRecipe' : 'copyDraft')),
+          h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, secondary),
+        );
+      }
+
+      return h(DrawerFrame, { t, onClose, footer, title: editing ? t('editRecipe') : share ? t('shareCommunity') : title, width: 480 }, body);
+    }
+
+    /** Add a recipe someone shared: paste its code, or pick the picture that carries it. */
+    function ImportDrawer({ t, onClose, onImported, importFile }) {
+      useEscape(onClose);
+      const [text, setText] = useState('');
+      const [error, setError] = useState('');
+      const [busy, setBusy] = useState(false);
+      const fileInput = useRef(null);
+      const submit = () => {
+        if (busy || text.trim() === '') return;
+        setBusy(true);
+        setError('');
+        postJson(RECIPES_ROUTE, { action: 'import', text })
+          .then((body) => {
+            if (body?.ok) onImported(body);
+            else setError(t('importFailed', { reason: body?.reason ?? '' }));
+          })
+          .catch(() => setError(t('actionFailed')))
+          .finally(() => setBusy(false));
+      };
+      return h(
+        DrawerFrame,
+        {
+          t,
+          onClose,
+          title: t('importTitle'),
+          footer: h('div', { style: { display: 'flex', gap: 8, justifyContent: 'flex-end' } }, h(DrawerButton, { onClick: onClose }, t('cancel')), h(DrawerButton, { primary: true, disabled: busy || text.trim() === '', onClick: submit, 'data-dsh-images-import-submit': true }, t('importDo'))),
+        },
+        h(
+          'label',
+          { style: field },
+          h('span', { style: labelStyle }, t('importPaste')),
+          h('textarea', { value: text, rows: 7, placeholder: 'dshimg1.…', onChange: (e) => setText(e.target.value), 'data-dsh-images-import-text': true, style: { ...inputStyle, resize: 'vertical', fontSize: 12.5, lineHeight: 1.5 } }),
+        ),
+        h(
+          'div',
+          { style: field },
+          h('span', { style: labelStyle }, t('importPicture')),
+          h('input', {
+            ref: fileInput,
+            type: 'file',
+            accept: 'image/png',
+            onChange: (e) => {
+              const file = e.target.files?.[0];
+              if (file) importFile(file, (message) => setError(message));
+            },
+            style: { fontSize: 12.5, color: C.muted },
+          }),
+          h('span', { style: hintStyle }, t('importPictureHint')),
+        ),
+        error ? h('div', { role: 'alert', style: { fontSize: 12.5, color: C.error, lineHeight: 1.5 } }, error) : null,
+      );
+    }
+
+    /** The community sources the Recipes tab reads: the default one and any the user added. */
+    function SourcesDrawer({ t, lang, data, onClose, onData }) {
+      useEscape(onClose);
+      const [url, setUrl] = useState('');
+      const [busy, setBusy] = useState(false);
+      const remote = (data?.sources ?? []).filter((s) => s.kind === 'remote');
+      const send = (body) => {
+        setBusy(true);
+        postJson(RECIPES_ROUTE, body)
+          .then((next) => next?.ok && onData(next))
+          .catch(() => {})
+          .finally(() => setBusy(false));
+      };
+      const setUrls = (urls) => send({ action: 'sources', urls });
+      return h(
+        DrawerFrame,
+        {
+          t,
+          onClose,
+          title: t('sourcesTitle'),
+          footer: h('div', { style: { display: 'flex', gap: 8, justifyContent: 'space-between' } }, h(DrawerButton, { onClick: () => openExternal(COMMUNITY_HOME) }, t('communityHome')), h(DrawerButton, { primary: true, disabled: busy, onClick: () => send({ action: 'refresh' }) }, busy ? '…' : t('refreshSources'))),
+        },
+        h('div', { style: hintStyle }, t('sourcesHint')),
+        remote.length === 0 ? h('div', { style: { fontSize: 12.5, color: C.muted } }, t('sourcesNone')) : null,
+        ...remote.map((s) =>
+          h(
+            'div',
+            { key: s.url, 'data-dsh-images-source': s.key, style: { border: `1px solid ${C.border1}`, borderRadius: 10, padding: '9px 12px', display: 'flex', flexDirection: 'column', gap: 3 } },
+            h('div', { style: { display: 'flex', gap: 8, alignItems: 'baseline' } }, h('span', { style: { fontWeight: 600, fontSize: 13 } }, s.title ? pickText(s.title, lang) : s.default ? t('communityDefault') : s.url), h('span', { style: { flex: 1 } }), h('button', { type: 'button', style: { ...subtleLink, color: C.error }, onClick: () => setUrls(remote.filter((r) => r.url !== s.url).map((r) => r.url)) }, t('removeSource'))),
+            h('div', { style: { ...hintStyle, wordBreak: 'break-all' } }, s.url),
+            h('div', { style: hintStyle }, s.error && !s.count ? t('sourceError', { reason: s.error }) : t('sourceStatus', { n: s.count, when: s.fetchedAt ? new Date(s.fetchedAt).toLocaleString() : '—' })),
+          ),
+        ),
+        h(
+          'div',
+          { style: { display: 'flex', gap: 8 } },
+          h('input', { value: url, placeholder: 'https://…/index.json', onChange: (e) => setUrl(e.target.value), 'aria-label': t('addSource'), style: { ...inputStyle, flex: 1 } }),
+          h(
+            DrawerButton,
+            {
+              disabled: busy || !/^https:\/\//i.test(url.trim()),
+              onClick: () => {
+                setUrls([...remote.map((r) => r.url), url.trim()]);
+                setUrl('');
+              },
+            },
+            t('addSource'),
+          ),
+        ),
+        !remote.some((s) => s.default) ? h('button', { type: 'button', style: { ...subtleLink, alignSelf: 'flex-start' }, onClick: () => setUrls([...remote.map((r) => r.url), 'https://raw.githubusercontent.com/kadaliao/dsh-images-recipes/main/index.json']) }, t('restoreDefault')) : null,
+      );
     }
 
     // --- dictionaries -------------------------------------------------------------------
@@ -1902,6 +2925,125 @@ window.__ModuleLoader__.load({
         minutesAgo: '{n} min ago',
         hoursAgo: '{n} h ago',
         daysAgo: '{n} d ago',
+        lang: "en",
+        testedWith: "tried on {models}",
+        withRecipe: "Recipe · {title}",
+        tabGallery: "Gallery",
+        tabRecipes: "Recipes",
+        recipeCount: "{n} recipes",
+        importRecipe: "Import",
+        sources: "Sources",
+        recipeGone: "That recipe is no longer in your library.",
+        alreadyMine: "It is already among your recipes.",
+        imported: "Imported \"{title}\" into your recipes.",
+        importNotPng: "Only a PNG can carry a recipe; paste the recipe code instead.",
+        importFailed: "Could not import: {reason}",
+        actionFailed: "That did not work. Try again.",
+        savedMine: "Saved to your recipes.",
+        view: "View",
+        showOffCopied: "The picture is copied: paste it into a comment on the page that opened.",
+        showOffManual: "Opened the recipe's page: attach the picture to a comment there.",
+        remix: "Make one like this",
+        saveAsRecipe: "Save as a recipe",
+        downloadWithRecipe: "Download with its recipe",
+        showOff: "Post to the works wall",
+        cardCredit: "Adapted from {repo}",
+        cardBy: "Shared by {author}",
+        cardFooter: "Drop this picture into DSH Images → Recipes → Import to use it",
+        draftUse: "Draw a picture with the \"{title}\" recipe (recipe: {ref}).",
+        draftRemix: "Draw another one the way this picture was made (recipe: {ref}).",
+        colon: ": ",
+        draftChange: "Change: {text}",
+        draftExtra: "Also: {text}",
+        draftAttach: "Attached: {list}.",
+        listSep: "; ",
+        remixTitle: "Make one like this",
+        inputN: "Input image {n}",
+        badgePhoto: "Photo",
+        originMine: "Mine",
+        originCommunity: "Community",
+        votes: "{n} 👍",
+        usedTimes: "used {n}×",
+        recipesUnavailable: "The recipes are not reachable. Refresh the page, or check the plugin is enabled.",
+        originAll: "All",
+        originBuiltin: "Built-in",
+        recipesNoMatch: "No recipe matches.",
+        mineEmpty: "No recipes of your own yet. In the gallery, open a picture's ⋯ menu and choose \"Save as a recipe\", or import one someone shared with you.",
+        communityUnreachable: "The community source cannot be reached right now ({reason}).",
+        communityEmpty: "No community recipes yet. Share one of yours to be the first.",
+        recipesEmpty: "No recipes.",
+        recipeSearch: "Search recipes",
+        catAll: "All",
+        cat_photo: "Photo",
+        cat_handdrawn: "Hand-drawn",
+        cat_editorial: "Magazine & poster",
+        cat_infographic: "Infographic",
+        cat_3d: "3D",
+        cat_sticker: "Sticker & GIF",
+        cat_illustration: "Illustration",
+        cat_product: "Product",
+        cat_comic: "Comic",
+        draftStarted: "A new conversation is ready with the recipe in the composer: press Send.",
+        draftStartedAttach: "A new conversation is ready: attach the picture(s) in the composer, then send.",
+        draftCopied: "Copied the message: paste it into any conversation.",
+        codeCopied: "Recipe code copied: send it to anyone who uses DSH Images.",
+        cardSaved: "Share card saved: it carries the recipe inside.",
+        recipeDeleted: "Recipe deleted.",
+        editFailed: "Could not save: {reason}",
+        recipeSaved: "Recipe saved.",
+        creditFrom: "From ",
+        sharedBy: "Shared by {author}",
+        worksWall: "Works wall ({n})",
+        editTitle: "Title",
+        editSummary: "Summary",
+        editCategory: "Category",
+        editPrompt: "Prompt template",
+        editPromptHint: "Write {{name}} for a blank the user fills in; give each blank a default below.",
+        editSlotLabel: "Blank {name}",
+        editSlotDefault: "Default",
+        shareIntro: "This opens a new issue in the community repository on GitHub with the recipe filled in. Once it is reviewed, everyone who follows the community source sees it.",
+        sharePrivacy: "Shared publicly: the title, summary, prompt and parameters above. Your photos and conversations are not shared.",
+        shareCover: "GitHub cannot take a picture through a link: download the cover here and drag it into the issue's Cover field.",
+        shareNoCover: "This recipe has no cover yet: drag a picture made with it into the issue's Cover field.",
+        needsInputs: "Works on {n} picture(s) of yours",
+        needsInputsHint: "Attach them in the composer before you send.",
+        slotDefault: "Default: {value}",
+        remixChange: "What to change",
+        extraWish: "Anything else (optional)",
+        remixChangeHint: "e.g. a different subject, another colour scheme",
+        extraWishHint: "e.g. warmer colours, add a title",
+        hidePrompt: "Hide the prompt",
+        showPrompt: "Show the prompt",
+        back: "Back",
+        downloadCover: "Download cover",
+        openGitHub: "Open GitHub",
+        shareOpened: "Opened GitHub: check the issue and submit it there.",
+        copyCode: "Copy recipe code",
+        shareCard: "Share card",
+        shareCommunity: "Share to community",
+        saveToMine: "Save to mine",
+        edit: "Edit",
+        confirmDelete: "Click again to delete",
+        deleteRecipe: "Delete",
+        startRecipe: "Start a conversation with it",
+        copyDraft: "Copy the message",
+        editRecipe: "Edit recipe",
+        importTitle: "Import a recipe",
+        importDo: "Import",
+        importPaste: "Paste a recipe code, or the whole message it came in",
+        importPicture: "Or pick a picture that carries a recipe",
+        importPictureHint: "A share card, or a picture downloaded with its recipe. You can also drop it anywhere on the Recipes tab.",
+        sourcesTitle: "Recipe sources",
+        communityHome: "Community on GitHub",
+        refreshSources: "Refresh",
+        sourcesHint: "Each source is a recipe index on the web (a JSON file in the Images recipe format), read once a week. Anyone can run one for a team or a group of friends.",
+        sourcesNone: "No sources: only the built-in recipes and your own are shown.",
+        communityDefault: "DSH Images community",
+        removeSource: "Remove",
+        sourceError: "Not reachable: {reason}",
+        sourceStatus: "{n} recipes · updated {when}",
+        addSource: "Add",
+        restoreDefault: "Add the DSH Images community source back",
       },
       zh: {
         title: '图片',
@@ -2006,6 +3148,125 @@ window.__ModuleLoader__.load({
         minutesAgo: '{n} 分钟前',
         hoursAgo: '{n} 小时前',
         daysAgo: '{n} 天前',
+        lang: "zh",
+        testedWith: "已在 {models} 上试过",
+        withRecipe: "玩法 · {title}",
+        tabGallery: "图库",
+        tabRecipes: "玩法",
+        recipeCount: "{n} 个玩法",
+        importRecipe: "导入",
+        sources: "订阅源",
+        recipeGone: "这个玩法已经不在你的玩法库里了。",
+        alreadyMine: "它已经在「我的」里了。",
+        imported: "已导入「{title}」到我的玩法。",
+        importNotPng: "只有 PNG 图片能带配方；请改为粘贴配方串。",
+        importFailed: "导入失败：{reason}",
+        actionFailed: "没有成功，请再试一次。",
+        savedMine: "已存到我的玩法。",
+        view: "查看",
+        showOffCopied: "图片已复制，在打开的页面里贴到评论即可。",
+        showOffManual: "已打开玩法主页，在评论里附上这张图即可。",
+        remix: "做同款",
+        saveAsRecipe: "存为玩法",
+        downloadWithRecipe: "下载（附带配方）",
+        showOff: "晒到作品墙",
+        cardCredit: "改编自 {repo}",
+        cardBy: "分享者 {author}",
+        cardFooter: "把这张图拖进 DSH Images「玩法 → 导入」，就能用这个玩法",
+        draftUse: "用「{title}」玩法画一张图（recipe: {ref}）。",
+        draftRemix: "照这张图的做法再画一张（recipe: {ref}）。",
+        colon: "：",
+        draftChange: "要改的：{text}",
+        draftExtra: "另外：{text}",
+        draftAttach: "参考图已附上：{list}。",
+        listSep: "；",
+        remixTitle: "做同款",
+        inputN: "参考图 {n}",
+        badgePhoto: "需照片",
+        originMine: "我的",
+        originCommunity: "社区",
+        votes: "{n} 👍",
+        usedTimes: "用过 {n} 次",
+        recipesUnavailable: "连不上玩法库。刷新页面，或确认插件已启用。",
+        originAll: "全部",
+        originBuiltin: "内置",
+        recipesNoMatch: "没有匹配的玩法。",
+        mineEmpty: "还没有自己的玩法。在图库里点图片的「⋯ → 存为玩法」，或者导入别人分享给你的配方。",
+        communityUnreachable: "社区源暂时连不上（{reason}）。",
+        communityEmpty: "社区里还没有玩法，分享一个你的，做第一个吧。",
+        recipesEmpty: "没有玩法。",
+        recipeSearch: "搜索玩法",
+        catAll: "全部",
+        cat_photo: "照片变身",
+        cat_handdrawn: "手绘",
+        cat_editorial: "杂志海报",
+        cat_infographic: "信息图",
+        cat_3d: "3D",
+        cat_sticker: "贴纸动图",
+        cat_illustration: "插画",
+        cat_product: "产品",
+        cat_comic: "漫画",
+        draftStarted: "已新开对话，配方在输入框里，按发送即可。",
+        draftStartedAttach: "已新开对话：先在输入框里附上图片，再发送。",
+        draftCopied: "消息已复制，粘贴到任意对话里即可。",
+        codeCopied: "配方串已复制，发给任何用 DSH Images 的人都能用。",
+        cardSaved: "分享卡已保存，图片里带着配方。",
+        recipeDeleted: "玩法已删除。",
+        editFailed: "保存失败：{reason}",
+        recipeSaved: "玩法已保存。",
+        creditFrom: "来源：",
+        sharedBy: "分享者 {author}",
+        worksWall: "作品墙（{n}）",
+        editTitle: "标题",
+        editSummary: "简介",
+        editCategory: "分类",
+        editPrompt: "提示词模板",
+        editPromptHint: "用 {{名字}} 写一个让用户填的空（名字用英文字母），并在下面给每个空一个默认值。",
+        editSlotLabel: "空 {name} 的名称",
+        editSlotDefault: "默认值",
+        shareIntro: "这会在 GitHub 的社区仓库里新开一个 issue，配方已经填好。审核通过后，所有订阅社区源的人都能看到它。",
+        sharePrivacy: "公开分享的内容就是上面这些：标题、简介、提示词和参数。你的照片和对话不会被分享。",
+        shareCover: "GitHub 不能通过链接带图片：先在这里下载封面，再把它拖进 issue 的「封面」栏。",
+        shareNoCover: "这个玩法还没有封面：把一张用它画的图拖进 issue 的「封面」栏。",
+        needsInputs: "需要你的 {n} 张图",
+        needsInputsHint: "发送前在输入框里附上。",
+        slotDefault: "默认：{value}",
+        remixChange: "想改什么",
+        extraWish: "还想要什么（可选）",
+        remixChangeHint: "比如换个主角、换一套配色",
+        extraWishHint: "比如暖一点的配色、加一行标题",
+        hidePrompt: "收起提示词",
+        showPrompt: "查看提示词",
+        back: "返回",
+        downloadCover: "下载封面",
+        openGitHub: "打开 GitHub",
+        shareOpened: "已打开 GitHub，确认无误后在那里提交。",
+        copyCode: "复制配方串",
+        shareCard: "分享卡",
+        shareCommunity: "分享到社区",
+        saveToMine: "存到我的",
+        edit: "编辑",
+        confirmDelete: "再点一次确认删除",
+        deleteRecipe: "删除",
+        startRecipe: "用它开始创作",
+        copyDraft: "复制消息",
+        editRecipe: "编辑玩法",
+        importTitle: "导入玩法",
+        importDo: "导入",
+        importPaste: "粘贴配方串，或者带着配方串的整段消息",
+        importPicture: "或者选一张带配方的图片",
+        importPictureHint: "分享卡，或用「下载（附带配方）」保存的图片。也可以直接拖到「玩法」页的任意位置。",
+        sourcesTitle: "玩法订阅源",
+        communityHome: "GitHub 上的社区",
+        refreshSources: "刷新",
+        sourcesHint: "每个订阅源是网上的一份玩法索引（Images 配方格式的 JSON 文件），每周读取一次。任何人都可以给团队或朋友圈办一个。",
+        sourcesNone: "没有订阅源：只显示内置玩法和你自己的。",
+        communityDefault: "DSH Images 社区",
+        removeSource: "移除",
+        sourceError: "连不上：{reason}",
+        sourceStatus: "{n} 个玩法 · {when} 更新",
+        addSource: "添加",
+        restoreDefault: "把 DSH Images 社区源加回来",
       },
     };
 
@@ -2787,7 +4048,21 @@ window.__ModuleLoader__.load({
         ctx.slots.inject('sidebar.panellist', () =>
           ctx.slots.register({ name: 'sidebar.panellist', id: PANEL_ID, order: 30, label: () => tr('title') }, ImagesGlyph),
         );
-        ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: PANEL_ID, locale: NS }, updates.opens(withT(ImagesPanel, { sessions }))));
+        // A recipe starts a new conversation with its message in the composer, for the user to send.
+        const drafts = {
+          available: () => typeof service('uiWorkspace')?.startSession === 'function',
+          start: (prompt) => {
+            const ui = service('uiWorkspace');
+            if (typeof ui?.startSession !== 'function') return false;
+            try {
+              ui.startSession(undefined, { prompt, whenDraftExists: 'replace' });
+              return true;
+            } catch {
+              return false;
+            }
+          },
+        };
+        ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: PANEL_ID, locale: NS }, updates.opens(withT(ImagesPanel, { sessions, drafts }))));
         // A bare `/images` opens the panel.
         if (typeof ctx.inject === 'function') {
           ctx.inject(['commandUi'], (scope) => {
