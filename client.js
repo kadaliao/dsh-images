@@ -47,6 +47,9 @@ window.__ModuleLoader__.load({
       muted: 'var(--dsw-alias-label-secondary)',
       faint: 'var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary))',
       hover: 'var(--dsw-alias-interactive-bg-hover, rgba(127,127,127,.12))',
+      // The host's accent for a picked filter, and its lift for a picked segment.
+      accent: 'var(--dsw-alias-state-business-primary, #4d6bfe)',
+      lift: 'var(--dsw-elevation-soft, 0 1px 2px rgba(0,0,0,.12))',
       error: 'var(--dsw-alias-state-error-primary, #f25a5a)',
     };
     const FONT = 'var(--dsh-content-font-size, 13.5px)';
@@ -1133,7 +1136,7 @@ window.__ModuleLoader__.load({
         h('span', { style: { fontSize: 15.5, fontWeight: 640, color: C.primary } }, t('title')),
         h(
           'span',
-          { role: 'tablist', style: { display: 'inline-flex', gap: 2, padding: 2, borderRadius: 9, border: `1px solid ${C.border1}`, alignSelf: 'center' } },
+          { role: 'tablist', style: { display: 'inline-flex', gap: 2, padding: 2, borderRadius: 9, background: C.hover, alignSelf: 'center' } },
           [
             ['gallery', t('tabGallery')],
             ['recipes', t('tabRecipes')],
@@ -1147,7 +1150,7 @@ window.__ModuleLoader__.load({
                 'aria-selected': tab === key,
                 'data-dsh-images-tab': key,
                 onClick: () => setTab(key),
-                style: { font: 'inherit', fontSize: 12.5, fontWeight: tab === key ? 600 : 500, padding: '3px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', background: tab === key ? C.label : 'transparent', color: tab === key ? 'var(--dsw-alias-label-on-brand, #fff)' : C.muted },
+                style: { font: 'inherit', fontSize: 12.5, fontWeight: tab === key ? 600 : 500, padding: '3px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', background: tab === key ? C.layer1 : 'transparent', boxShadow: tab === key ? C.lift : 'none', color: tab === key ? C.primary : C.muted },
               },
               label,
             ),
@@ -1931,7 +1934,7 @@ window.__ModuleLoader__.load({
             opacity: disabled ? 0.6 : 1,
             border: primary ? 'none' : `1px solid ${C.border}`,
             background: primary ? C.label : 'transparent',
-            color: primary ? 'var(--dsw-alias-label-on-brand, #fff)' : C.primary,
+            color: primary ? 'var(--dsw-alias-label-primary-foreground, #fff)' : C.primary,
           },
         },
         children,
@@ -2237,8 +2240,8 @@ window.__ModuleLoader__.load({
             borderRadius: 999,
             cursor: 'pointer',
             border: `1px solid ${active ? 'transparent' : C.border1}`,
-            background: active ? C.label : 'transparent',
-            color: active ? 'var(--dsw-alias-label-on-brand, #fff)' : C.muted,
+            background: active ? C.hover : 'transparent',
+            color: active ? C.accent : C.muted,
             whiteSpace: 'nowrap',
           },
         },
@@ -3751,7 +3754,7 @@ window.__ModuleLoader__.load({
         muted: 'var(--dsw-alias-label-secondary, #646a73)',
         faint: 'var(--dsw-alias-label-tertiary, #8f959e)',
         brand: 'var(--dsw-alias-brand-primary, #4d6bfe)',
-        onBrand: 'var(--dsw-alias-label-on-brand, #fff)',
+        onBrand: 'var(--dsw-alias-label-primary-foreground, #fff)',
         ok: 'var(--dsw-alias-state-success-primary, #2ea121)',
         error: 'var(--dsw-alias-state-error-primary, #d83931)',
       };
