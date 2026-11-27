@@ -114,7 +114,7 @@ gives a GIF that flickers between parts of one picture. More families are added 
 **Images** in the left sidebar (or `/images`) opens a gallery of every picture generated in any
 conversation, newest first, as a masonry grid of cards. Each card shows the prompt, the model, the
 pixel size, the cost and when it was made; the header adds up what was spent. Hover a card for **download** and the **⋯ menu** (download, copy
-prompt, make one like this, save as a recipe, download with its recipe, remove from gallery); click it to enlarge and step through the gallery with the arrow keys.
+prompt, make one like this, make a recipe template, save as a recipe as is, download with its recipe, remove from gallery); click it to enlarge and step through the gallery with the arrow keys.
 The viewer's **Open conversation** button takes you to the conversation the picture was drawn in
 (hover it for that conversation's title). An archived conversation stays shut: the viewer says so
 and offers **Unarchive and open** (for a subagent's picture, that unarchives the conversation it ran
@@ -164,10 +164,15 @@ cover's own shape (from 1:2 tall to 3:1 wide), so nothing is cut off.
 
 - **Make one like this** — the picture's own prompt and settings as a recipe: say what to change and
   start a conversation with it.
-- **Save as a recipe** — keeps the picture's prompt and settings under **Mine**, the picture as its
-  cover. Edit it there: rewrite a word as `{{name}}` to make it a blank and give it a default. Or
-  ask the model to "turn this picture into a recipe" — it writes the blanks itself (`image_recipes`
-  `save`).
+- **Make a recipe template** — has the model make it a template with blanks to fill in, like the
+  built-in recipes: a new conversation opens in the Images workspace with the request written, and
+  you press Send. The model reads the picture's prompt, turns the parts worth changing (words in the
+  picture, the subject, colors, style details) into blanks with labels and defaults in Chinese and
+  English, and keeps it under **Mine** with the picture as its cover (`image_recipes` `get` and
+  `save`). Each template takes one turn of the chat model.
+- **Save as a recipe, as is** — keeps the picture's prompt and settings under **Mine** unchanged, the
+  picture as its cover, with no blanks. Edit it there: rewrite a word as `{{name}}` to make it a
+  blank and give it a default.
 - **Download with its recipe** — the PNG with its recipe inside (see below).
 
 A built-in or community recipe is copied to **Mine** with **Save to mine**. A recipe of your own
@@ -191,8 +196,11 @@ Every recipe can be passed on three ways, none of which needs a server:
   Cover (⌘V) and submit. In
   [kadaliao/dsh-images-recipes](https://github.com/kadaliao/dsh-images-recipes) a workflow checks it
   and opens a pull request, and once it is merged everyone sees it; in a repository source (below)
-  it is live as soon as it is submitted. A recipe you shared there that went up without its cover
-  says **No cover · Add it** on its card: that copies the cover and opens the issue, to edit it in.
+  it is live as soon as it is submitted. A recipe with no blanks says, before it is shared, that
+  others can only draw the same picture again; **Make it a template first** has the model give it
+  blanks (one of yours is changed in place, with `image_recipes` `update`), to share after. A
+  recipe you shared there that went up without its cover says **No cover · Add it** on its card:
+  that copies the cover and opens the issue, to edit it in.
 
 **The community.** The Recipes tab follows the community index
 (`https://raw.githubusercontent.com/kadaliao/dsh-images-recipes/main/index.json`, with the jsDelivr
@@ -345,7 +353,7 @@ Recipes live in `lib/recipes.mjs` (the format, templates, recipe codes and PNG t
 `mine:…`, `community:…`, `image:<id>`). The built-in ones ship in `recipes/builtin.json` with their
 covers; your own are in `~/.dsh/cache/images/recipes/mine.json`. `generate_image` takes `recipe` and
 `slots`, renders the template, applies its size and frames, and records the recipe on the picture;
-`image_recipes` searches, reads, saves and imports them for the model.
+`image_recipes` searches, reads, saves, changes (your own only) and imports them for the model.
 
 The Client half draws the tool's card, the result row outside the turn fold, the sidebar entry and
 the panel. Nothing is written to the Session log beyond the tool call and its result, which the

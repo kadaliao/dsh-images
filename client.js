@@ -1105,6 +1105,7 @@ window.__ModuleLoader__.load({
         });
       const galleryActions = (item) => [
         { id: 'remix', run: () => setSheet(pictureRecipe(t, item)) },
+        { id: 'makeTemplate', run: () => void startTemplate(t, lang, pictureRecipe(t, item), drafts, setToast) },
         { id: 'saveAsRecipe', run: () => void saveAsRecipe(item) },
         ...(item.mediaType === 'image/png' ? [{ id: 'downloadWithRecipe', run: () => saveUrl(`${item.url}?download=1&recipe=1`, `${item.id}.png`) }] : []),
         ...(isRemote(item.recipe?.ref) ? [{ id: 'showOff', run: () => void showOff(item) }] : []),
@@ -2234,6 +2235,29 @@ window.__ModuleLoader__.load({
       return lines.join('\n');
     }
 
+    /**
+     * The message that asks the model to make a template of a picture, or of a recipe of the
+     * user's without blanks: it picks the parts worth changing and makes them blanks.
+     */
+    function templateMessage(t, lang, recipe) {
+      const blank = '{{name}}';
+      return recipe.origin === 'image' ? t('draftTemplatePicture', { ref: recipe.ref, id: recipe.image, blank }) : t('draftTemplateMine', { title: pickText(recipe.title, lang), ref: recipe.ref, blank });
+    }
+    /** Start a conversation that makes a template; without one to start, the message is copied. Resolves whether it started. */
+    function startTemplate(t, lang, recipe, drafts, onToast) {
+      const text = templateMessage(t, lang, recipe);
+      return Promise.resolve(drafts?.start?.(text))
+        .catch(() => false)
+        .then((started) => {
+          if (started) onToast(t('templateStarted'));
+          else {
+            copyText(text);
+            onToast(t('draftCopied'));
+          }
+          return Boolean(started);
+        });
+    }
+
     /** A gallery picture as the recipe it stands for, for the sheet: "make one like this". */
     function pictureRecipe(t, item) {
       const inputs = Math.max(0, Number(item.inputs) || 0);
@@ -2713,6 +2737,14 @@ window.__ModuleLoader__.load({
             h('div', null, h('b', null, t('editCategory')), t('colon'), t(`cat_${p.category}`), p.params?.size ? ` · ${p.params.size}` : '', p.params?.frames ? ` · GIF ${p.params.frames}` : ''),
             h('div', { style: { whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 180, overflowY: 'auto', color: C.muted } }, p.prompt),
           ),
+          (p.slots ?? []).length === 0
+            ? h(
+                'div',
+                { key: 'blanks', 'data-dsh-images-share-blanks': true, style: { ...hintStyle, display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between' } },
+                h('span', null, t('shareNoBlanks')),
+                h(DrawerButton, { 'data-dsh-images-make-template': true, onClick: () => void startTemplate(t, lang, recipe, drafts, onToast).then((started) => started && onClose()) }, t('makeTemplateFirst')),
+              )
+            : null,
           h('div', { key: 'private', style: hintStyle }, t(open ? 'sharePrivacyOpen' : 'sharePrivacy')),
           h('div', { key: 'cover', style: hintStyle }, t(recipe.coverUrl ? (open ? 'shareCoverOpen' : 'shareCover') : open ? 'shareNoCoverOpen' : 'shareNoCover')),
         ];
@@ -3077,7 +3109,8 @@ window.__ModuleLoader__.load({
         showOffCopied: "The picture is copied: paste it into a comment on the page that opened.",
         showOffManual: "Opened the recipe's page: attach the picture to a comment there.",
         remix: "Make one like this",
-        saveAsRecipe: "Save as a recipe",
+        saveAsRecipe: "Save as a recipe, as is",
+        makeTemplate: 'Make a recipe template',
         downloadWithRecipe: "Download with its recipe",
         showOff: "Post to the works wall",
         cardCredit: "Adapted from {repo}",
@@ -3085,6 +3118,11 @@ window.__ModuleLoader__.load({
         cardFooter: "Drop this picture into DSH Images → Recipes → Import to use it",
         draftUse: "Draw a picture with the \"{title}\" recipe (recipe: {ref}).",
         draftRemix: "Draw another one the way this picture was made (recipe: {ref}).",
+        draftTemplatePicture: 'Make this gallery picture a reusable recipe of mine (recipe: {ref}): read its prompt with image_recipes get, and turn the parts worth changing (words in the picture, the subject, colors, style details) into blanks like {blank}, named in English. Give each blank a label in Chinese and English and a default taken from this picture, write a title and a summary, keep its size, frames and input images as they are, then keep it with image_recipes save and fromImage "{id}", so this picture is its cover.',
+        draftTemplateMine: 'Give my recipe "{title}" blanks to fill in (recipe: {ref}): read it with image_recipes get, and turn the parts worth changing (words in the picture, the subject, colors, style details) into blanks like {blank}, named in English. Give each blank a label in Chinese and English and a default taken from the prompt as it is, then change the recipe with image_recipes update.',
+        templateStarted: 'A new conversation is ready in the Images workspace: press Send and the model picks the blanks. The template shows under Recipes → Mine.',
+        shareNoBlanks: 'This recipe has no blanks to fill in, so others can only draw this same picture again. Let the model pick the parts worth changing (words, colors, the subject) first, then share the template.',
+        makeTemplateFirst: 'Make it a template first',
         colon: ": ",
         draftChange: "Change: {text}",
         draftExtra: "Also: {text}",
@@ -3317,7 +3355,8 @@ window.__ModuleLoader__.load({
         showOffCopied: "图片已复制，在打开的页面里贴到评论即可。",
         showOffManual: "已打开玩法主页，在评论里附上这张图即可。",
         remix: "做同款",
-        saveAsRecipe: "存为玩法",
+        saveAsRecipe: "原样存为玩法",
+        makeTemplate: '做成玩法模板',
         downloadWithRecipe: "下载（附带配方）",
         showOff: "晒到作品墙",
         cardCredit: "改编自 {repo}",
@@ -3325,6 +3364,11 @@ window.__ModuleLoader__.load({
         cardFooter: "把这张图拖进 DSH Images「玩法 → 导入」，就能用这个玩法",
         draftUse: "用「{title}」玩法画一张图（recipe: {ref}）。",
         draftRemix: "照这张图的做法再画一张（recipe: {ref}）。",
+        draftTemplatePicture: '把图库里的这张图做成一个可以复用的玩法（recipe: {ref}）：用 image_recipes 的 get 读出它的提示词，把值得让人换的部分（画面里的文字、主体、配色、风格细节）改成 {blank} 这样的空，空的名字用英文。每个空写好中英文标签和默认值（默认值取这张图里的），起好标题和简介，尺寸、帧数和参考图照原样保留，再用 image_recipes 的 save 存到我的玩法，fromImage 填 "{id}"，用这张图当封面。',
+        draftTemplateMine: '给我的玩法「{title}」加上可填的空（recipe: {ref}）：用 image_recipes 的 get 读出它，把值得让人换的部分（画面里的文字、主体、配色、风格细节）改成 {blank} 这样的空，空的名字用英文。每个空写好中英文标签和默认值（默认值取现在的写法），再用 image_recipes 的 update 改好这个玩法。',
+        templateStarted: '已在「图片」工作区新开对话：按发送，模型会挑出可填的空，做好的模板在「玩法 → 我的」里。',
+        shareNoBlanks: '这个玩法没有可填的空，别人只能原样再画这一张。可以先让模型挑出值得换的部分（画面里的字、主体、配色），做成模板再分享。',
+        makeTemplateFirst: '先做成模板',
         colon: "：",
         draftChange: "要改的：{text}",
         draftExtra: "另外：{text}",

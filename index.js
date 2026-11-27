@@ -803,6 +803,20 @@ export function buildRecipesTool(library, store) {
       const saved = library.saveMine(raw, picture ? { cover: { file: picture.file, mediaType: picture.mediaType } } : {});
       return { ok: true, action, ref: saved.ref, line: recipeLine(saved) };
     }
+    if (action === 'update') {
+      const parsed = parseRef(String(args.ref ?? ''));
+      if (parsed?.source !== 'mine') return { ok: false, action, reason: 'only the user\'s own recipes (mine:…) can be changed; save a new one instead' };
+      const patch = objectArg(args.recipe);
+      if (!patch || typeof patch !== 'object' || Array.isArray(patch)) return { ok: false, action, reason: 'recipe: the fields to change, as an object' };
+      let next;
+      try {
+        next = library.updateMine(parsed.id, patch);
+      } catch (error) {
+        return { ok: false, action, reason: error?.message ?? String(error) };
+      }
+      if (!next) return { ok: false, action, reason: `no recipe "${args.ref}"` };
+      return { ok: true, action, ref: next.ref, line: recipeLine(next) };
+    }
     return { ok: false, action, reason: `unknown action "${action}"` };
   };
   return defineTool({
@@ -811,21 +825,22 @@ export function buildRecipesTool(library, store) {
       'The recipes (玩法) of the Images plugin: tested prompt templates for generate_image, in the categories ' +
       `${CATEGORIES.join(', ')} — built-in ones, the user's own, and community ones. ` +
       'search: find recipes by words in any language ("magazine cover", "手绘", "figurine"), or list them, optionally by category. ' +
-      'get: one recipe in full (its template, blanks, inputs, parameters, credit). ' +
+      'get: one recipe in full (its template, blanks, inputs, parameters, credit); `image:<id>` gives a gallery picture\'s own prompt and settings as a recipe. ' +
       'save: keep a recipe you wrote as the user\'s own ("save this as a recipe", "turn picture X into a reusable recipe": generalize its prompt with {{blank}} placeholders, give every blank a default, and pass fromImage to use that picture as the cover). ' +
+      'update: change one of the user\'s own recipes (`mine:…`) in place, e.g. to give it {{blanks}}; pass only the fields that change, and with a new prompt its slots. ' +
       'import: add a recipe someone shared, from a text holding a recipe code (dshimg1.…). ' +
       'To draw from a recipe, call generate_image with its ref in `recipe`.',
     parameters: {
-      action: { type: 'string', enum: ['search', 'get', 'save', 'import'], required: true, description: 'What to do.' },
+      action: { type: 'string', enum: ['search', 'get', 'save', 'update', 'import'], required: true, description: 'What to do.' },
       query: { type: 'string', description: 'search: words to look for. Leave out to list.' },
       category: { type: 'string', enum: CATEGORIES, description: 'search: only this category.' },
       limit: { type: 'integer', description: 'search: how many to return (default 12, at most 30).' },
-      ref: { type: 'string', description: 'get: the recipe\'s ref.' },
+      ref: { type: 'string', description: 'get: the recipe\'s ref. update: the ref of the user\'s recipe to change (`mine:…`).' },
       recipe: {
         type: 'object',
         additionalProperties: true,
         description:
-          'save: the recipe — {title: {zh, en}, summary: {zh, en}, category, tags, prompt (with {{name}} blanks), slots: [{name, label: {zh, en}, default}], inputs: [{label: {zh, en}}] when it works on the user\'s pictures, params: {size, frames}}.',
+          'save: the recipe — {title: {zh, en}, summary: {zh, en}, category, tags, prompt (with {{name}} blanks), slots: [{name, label: {zh, en}, default}], inputs: [{label: {zh, en}}] when it works on the user\'s pictures, params: {size, frames}}. update: only the fields that change, in the same shape.',
       },
       fromImage: { type: 'string', description: 'save/import: the id of a gallery picture to use as the recipe\'s cover.' },
       code: { type: 'string', description: 'import: the text holding the recipe code, as the user pasted it.' },
@@ -839,6 +854,7 @@ export function buildRecipesTool(library, store) {
           return [{ type: 'text', text: [head, ...value.recipes.map((r) => r.line)].join('\n') }];
         }
         if (value.action === 'get') return [{ type: 'text', text: `${value.note}\n${JSON.stringify(value.recipe, null, 2)}` }];
+        if (value.action === 'update') return [{ type: 'text', text: `Changed the user's own recipe; it is in the Images panel under Recipes → Mine.\n${value.line}` }];
         return [{ type: 'text', text: `Saved as the user's own recipe; it is in the Images panel under Recipes → Mine.\n${value.line}` }];
       },
     },

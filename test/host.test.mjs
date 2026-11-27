@@ -612,6 +612,18 @@ test('image_recipes finds, reads, keeps and imports recipes', async () => {
   assert.equal((await run({ action: 'import', code: 'nothing' })).ok, false);
   assert.equal((await run({ action: 'save', recipe: {}, fromImage: 'x' })).ok, false);
 
+  // One of the user's own takes more blanks in place; nothing else can be changed.
+  const updated = await run({ action: 'update', ref: 'mine:neon-sign', recipe: JSON.stringify({ prompt: 'A {{color}} neon sign reading "{{text}}"', slots: [{ name: 'text', default: 'OPEN' }, { name: 'color', label: { zh: '颜色', en: 'Color' }, default: 'pink' }] }) });
+  assert.equal(updated.ref, 'mine:neon-sign');
+  assert.match(tool.output.render({}, updated)[0].text, /^Changed the user's own recipe/);
+  const after = (await run({ action: 'get', ref: 'mine:neon-sign' })).recipe;
+  assert.deepEqual(after.slots.map((x) => [x.name, x.default]), [['color', 'pink'], ['text', 'OPEN']]);
+  assert.deepEqual(after.title, { en: 'Neon sign', zh: '霓虹灯牌' });
+  assert.match((await run({ action: 'update', ref: 'builtin:desk-figurine', recipe: { prompt: 'x' } })).reason, /only the user's own recipes/);
+  assert.match((await run({ action: 'update', ref: 'mine:nope', recipe: { prompt: 'x' } })).reason, /no recipe "mine:nope"/);
+  assert.match((await run({ action: 'update', ref: 'mine:neon-sign', recipe: { prompt: '' } })).reason, /no prompt/);
+  assert.equal((await run({ action: 'update', ref: 'mine:neon-sign', recipe: 'not json' })).ok, false);
+
   // A recipe of the user's own with no cover takes its first picture.
   await h.run({ recipe: 'mine:neon-sign' });
   const listing = await h.request('/__dsh_images/recipes');

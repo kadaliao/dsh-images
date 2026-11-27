@@ -411,13 +411,22 @@ test('the gallery panel lists the newest images first, enlarges one, and removes
   hooks.rewind();
   tree = panel({});
   const menu = findAll(tree, (n) => n.props['data-dsh-images-menu'])[0];
-  assert.deepEqual(collect(menu), ['Download', 'Copy prompt', 'Make one like this', 'Save as a recipe', 'Download with its recipe', 'Remove from gallery']);
+  assert.deepEqual(collect(menu), ['Download', 'Copy prompt', 'Make one like this', 'Make a recipe template', 'Save as a recipe, as is', 'Download with its recipe', 'Remove from gallery']);
+  // A template is the model's to make; with no conversation to start, its message is copied.
+  const copied = [];
+  Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, value: { writeText: async (text) => void copied.push(text) } });
+  findAll(menu, (n) => n.props.role === 'menuitem')[3].props.onClick();
+  await flush();
+  delete globalThis.navigator.clipboard;
+  assert.equal(copied.length, 1);
+  assert.match(copied[0], /^Make this gallery picture a reusable recipe of mine \(recipe: image:b\): read its prompt with image_recipes get, .*blanks like \{\{name\}\}.*image_recipes save and fromImage "b"/);
   findAll(menu, (n) => n.props.role === 'menuitem').at(-1).props.onClick();
   await flush();
   assert.deepEqual(posts, [{ url: '/__dsh_images/delete', body: { id: 'b' } }]);
   hooks.rewind();
   tree = panel({});
   assert.match(collect(tree).join(' '), /1 images/);
+  assert.match(collect(tree).join(' '), /Copied the message/);
   assert.equal(findAll(tree, (n) => n.type === 'img').length, 1);
 });
 
@@ -1064,6 +1073,22 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
     hooks.rewind();
     tree = panel({});
     assert.match(collect(tree).join(' '), /the cover is on the clipboard: paste it under Cover/);
+
+    // A recipe with no blanks says so before it is shared, and the model can give it some first.
+    assert.match(shareText, /This recipe has no blanks to fill in, so others can only draw this same picture again/);
+    findAll(tree, (n) => n.props['data-dsh-images-share'])[0].props.onClick();
+    await flush();
+    await flush();
+    hooks.rewind();
+    tree = panel({});
+    findAll(tree, (n) => n.props['data-dsh-images-make-template'])[0].props.onClick();
+    for (let i = 0; i < 4; i += 1) await flush();
+    assert.equal(drafts.length, 2);
+    assert.match(drafts[1].options.prompt, /^Give my recipe "Neon sign" blanks to fill in \(recipe: mine:neon\): .*blanks like \{\{name\}\}.*image_recipes update\.$/);
+    hooks.rewind();
+    tree = panel({});
+    assert.match(collect(tree).join(' '), /press Send and the model picks the blanks/);
+    assert.equal(findAll(tree, (n) => n.props['data-dsh-images-drawer']).length, 0, 'the sheet closed');
   } finally {
     delete globalThis.localStorage;
     delete globalThis.window.open;
