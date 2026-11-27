@@ -930,6 +930,20 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
       const body = JSON.parse(init.body);
       posts.push({ url: String(url), body });
       if (String(url) === '/__dsh_images/workspace') return { ok: true, json: async () => ({ ok: true, path: '/home/u/.dsh/images/workspace', workspaceId: 'ws-images' }) };
+      if (body.action === 'submit') {
+        return {
+          ok: true,
+          json: async () => ({
+            ok: true,
+            url: 'https://ghe.example.com/team/recipes/issues/new?body=x',
+            targets: [
+              { key: 's1', title: { zh: '组里的玩法', en: 'Team recipes' }, home: 'https://ghe.example.com/team/recipes', issues: 'open', default: false, url: 'https://ghe.example.com/team/recipes/issues/new?body=x' },
+              { key: 'community', title: null, home: 'https://github.com/kadaliao/dsh-images-recipes', issues: 'reviewed', default: true, url: 'https://github.com/kadaliao/dsh-images-recipes/issues/new?template=recipe.yml' },
+            ],
+            recipe: { title: { en: 'Neon sign' }, summary: {}, category: 'illustration', prompt: 'neon', params: {} },
+          }),
+        };
+      }
       return { ok: true, json: async () => (body.action === 'export' ? { ok: true, code: 'dshimg1.abc', text: 'share text dshimg1.abc' } : { ok: true }) };
     }
     if (String(url).startsWith('/__dsh_images/recipes')) {
@@ -1004,8 +1018,39 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
     await flush();
     await flush();
     assert.deepEqual(posts.at(-1), { url: '/__dsh_images/recipes', body: { action: 'export', ref: 'community:riso', lang: 'en' } });
+    // Close it by its backdrop.
+    findAll(tree, (n) => n.props['data-dsh-images-drawer'])[0].children[1].props.onClick();
+    hooks.rewind();
+    tree = panel({});
+    assert.equal(findAll(tree, (n) => n.props['data-dsh-images-drawer']).length, 0);
+
+    // One of the user's own: shared to a team repository, where it is live once submitted, or to the reviewed community.
+    findAll(tree, (n) => n.props['data-dsh-images-recipe'] === 'mine:neon')[0].props.onClick();
+    hooks.rewind();
+    tree = panel({});
+    findAll(tree, (n) => n.props['data-dsh-images-share'])[0].props.onClick();
+    await flush();
+    await flush();
+    hooks.rewind();
+    tree = panel({});
+    const targets = findAll(tree, (n) => n.props['data-dsh-images-share-target'] !== undefined);
+    assert.deepEqual(targets.map((n) => n.props['data-dsh-images-share-target']), ['s1', 'community']);
+    let shareText = collect(tree).join(' ');
+    assert.match(shareText, /Team recipes +live once submitted/);
+    assert.match(shareText, /DSH Images community +reviewed first/);
+    assert.match(shareText, /opens a new issue in Team recipes/);
+    const opened = [];
+    globalThis.window.open = (url) => opened.push(url);
+    findAll(targets[1], (n) => n.type === 'input')[0].props.onChange();
+    hooks.rewind();
+    tree = panel({});
+    shareText = collect(tree).join(' ');
+    assert.match(shareText, /Once it is reviewed/);
+    findAll(tree, (n) => n.props['data-dsh-images-open-github'])[0].props.onClick();
+    assert.deepEqual(opened, ['https://github.com/kadaliao/dsh-images-recipes/issues/new?template=recipe.yml']);
   } finally {
     delete globalThis.localStorage;
+    delete globalThis.window.open;
   }
 });
 

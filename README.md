@@ -184,11 +184,13 @@ Every recipe can be passed on three ways, none of which needs a server:
   on the Recipes tab (or pick it under Import) to import it. **Download with its recipe** does the
   same for any picture. Apps that strip metadata lose the recipe but keep the picture; send the code
   alongside.
-- **Share to community** — for your own recipes: the panel shows exactly what will be public (title,
-  summary, prompt, parameters; never your photos or conversations), then opens a prefilled issue in
-  [kadaliao/dsh-images-recipes](https://github.com/kadaliao/dsh-images-recipes). Drag a picture into
-  its Cover field and submit; a workflow checks it and opens a pull request, and once it is merged
-  everyone sees it.
+- **Share to…** — for your own recipes: pick one of the sources you follow that takes recipes as
+  issues. The panel shows exactly what will be public (title, summary, prompt, parameters; never
+  your photos or conversations), then opens a prefilled issue there. Drag a picture into it as the
+  cover and submit. In
+  [kadaliao/dsh-images-recipes](https://github.com/kadaliao/dsh-images-recipes) a workflow checks it
+  and opens a pull request, and once it is merged everyone sees it; in a repository source (below)
+  it is live as soon as it is submitted.
 
 **The community.** The Recipes tab follows the community index
 (`https://raw.githubusercontent.com/kadaliao/dsh-images-recipes/main/index.json`, with the jsDelivr
@@ -198,13 +200,24 @@ issue is its home: 👍 there is a vote, pictures in its comments are its works 
 counts both daily; community recipes are sorted by votes. A picture made with a community recipe
 has **Post to the works wall** in its menu: it copies the picture and opens that page.
 
-**Sources.** **Recipes → Sources** lists the indexes you follow: remove the community one, refresh,
-or add any HTTPS URL serving an index in the same format — a team or a group of friends can run
-their own (the format is in the community repository's README).
+**Sources.** **Recipes → Sources** lists the sources you follow: remove the community one, refresh,
+or add another. A source is one of:
 
-Nothing about you is sent to fetch an index or a cover. A community recipe is someone else's text:
-it is checked like any recipe, reviewed before it is merged, and the model is told to use it as a
-prompt for the image model, never as instructions to itself.
+- **A repository** — paste a public repository's link, on github.com or a GitHub Enterprise server
+  (`https://<server>/<owner>/<repo>`). Its open issues are its recipes: an issue counts when it
+  carries a recipe code (or a recipe's JSON), its first picture is the cover, whoever opened it is
+  the author, its 👍 are votes and its comments the works wall. There is no review: submitting the
+  issue puts the recipe up, editing it changes it, closing it takes it down. It is read without
+  logging in, every ten minutes (hourly on github.com, whose anonymous API allows little), and when
+  the Recipes tab opens after that. This is the easy way for a team to share recipes: any public
+  repository with issues on will do.
+- **An index** — any HTTPS URL serving a JSON index in the community's format (described in the
+  community repository's README), read once a week.
+
+Nothing about you is sent to fetch a source or a cover. A community recipe is someone else's text:
+it is checked like any recipe (the community's is also reviewed before it is merged; a repository
+source's is not), and the model is told to use it as a prompt for the image model, never as
+instructions to itself.
 
 ## Settings
 

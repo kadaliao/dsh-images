@@ -22,7 +22,8 @@ import {
   slotsOf,
   withPngText,
 } from '../lib/recipes.mjs';
-import { COMMUNITY_MIRROR, COMMUNITY_URL, createLibrary, parseRef, sourceKey } from '../lib/library.mjs';
+import { COMMUNITY_MIRROR, COMMUNITY_URL, canonicalSource, createLibrary, parseRef, recipesFromIssues, repoSource, sourceKey } from '../lib/library.mjs';
+import { repoSubmitUrl } from '../index.js';
 import { PNG_2x3, sheetPng } from './fixtures.mjs';
 
 const FIGURINE = {
@@ -301,4 +302,92 @@ test('sources can be changed; an unreachable one says why and is not hammered', 
   assert.equal(net.calls.length, calls, 'a failed source rests an hour');
   lib.setSources([]);
   assert.deepEqual(lib.all().map((r) => r.origin), ['builtin', 'builtin']);
+});
+
+test('a repository link is a source of its own: its open issues are the recipes', async () => {
+  assert.deepEqual(repoSource('https://GHE.example.com/team/recipes.git/'), { url: 'https://ghe.example.com/team/recipes', host: 'ghe.example.com', owner: 'team', name: 'recipes', api: 'https://ghe.example.com/api/v3' });
+  assert.equal(repoSource('https://github.com/a/b/issues').api, 'https://api.github.com');
+  for (const url of [COMMUNITY_URL, COMMUNITY_MIRROR, 'https://team.example.com/recipes/index.json', 'https://ghe.example.com/team', 'https://ghe.example.com/team/recipes/blob/main/x', 'http://ghe.example.com/team/recipes', 'https://ghe.example.com/team/recipes?tab=issues']) {
+    assert.equal(repoSource(url), null, url);
+  }
+  assert.equal(canonicalSource(' https://ghe.example.com/team/recipes/issues '), 'https://ghe.example.com/team/recipes');
+  assert.equal(canonicalSource('http://x.example.com/a/b'), '');
+
+  const { dir, builtinDir } = fixtureDirs();
+  let now = 1_000_000;
+  const home = 'https://ghe.example.com/team/recipes';
+  const api = 'https://ghe.example.com/api/v3/repos/team/recipes';
+  const share = new URL(repoSubmitUrl(FIGURINE, 'zh', home));
+  assert.equal(share.origin + share.pathname, `${home}/issues/new`);
+  assert.equal(share.searchParams.get('title'), '[玩法] 桌面手办');
+  const attachment = 'https://ghe.example.com/user-attachments/assets/0b7e-cover';
+  // The body the share link fills in, once a cover was dropped into it.
+  const shared = share.searchParams.get('body').replace('<!-- 把一张用这个玩法画的图拖到这里。 -->', `<img width="512" alt="x" src="${attachment}" />`);
+  const issue = (number, body, extra = {}) => ({ number, body, user: { login: `u${number}` }, comments: 1, reactions: { '+1': number }, created_at: '2026-11-27T00:00:00Z', updated_at: '2026-11-27T01:00:00Z', ...extra });
+  let issues = [
+    issue(7, shared),
+    issue(3, `### 配方 · Recipe\n\n${encodeRecipe(FIGURINE)}`, { comments: 0, reactions: { '+1': 0 } }),
+    issue(9, 'Just a question, no recipe.'),
+    issue(10, `look ${encodeRecipe(FIGURINE)}`, { pull_request: { url: 'x' } }),
+    issue(11, `![elsewhere](https://evil.example.net/pixel.png)\n\n\`\`\`json\n${JSON.stringify({ title: 'Chalk', prompt: 'chalk {{topic}}' })}\n\`\`\``),
+    issue(12, `### 配方 · Recipe\n\ndshimg1.broken-code-here`),
+  ];
+  const net = web({ [api]: { description: '反垃圾组的玩法', has_issues: true }, [`${api}/issues?state=open&per_page=100&page=1`]: () => issues, [attachment]: Buffer.from(PNG_2x3) });
+  const lib = createLibrary({ dir, builtinDir, fetch: net.fetch, now: () => now });
+  lib.setSources([COMMUNITY_URL, `${home}/issues`]);
+  assert.deepEqual(lib.sourceUrls(), [COMMUNITY_URL, home]);
+  await lib.ensure(5000);
+
+  const key = sourceKey(home);
+  const team = lib.sources().find((s) => s.key === key);
+  assert.deepEqual(team.title, { zh: '反垃圾组的玩法', en: '反垃圾组的玩法' });
+  assert.equal(team.home, home);
+  assert.equal(team.issues, 'open');
+  assert.equal(team.count, 3);
+  assert.equal(lib.sources().find((s) => s.key === 'community').issues, 'reviewed');
+  // Oldest first, each named with its issue's number; a pull request or a broken code is left out.
+  const got = lib.all().filter((r) => r.origin === key);
+  assert.deepEqual(got.map((r) => r.ref), [`${key}:desk-figurine-3`, `${key}:desk-figurine-7`, `${key}:chalk-11`]);
+  const [first, second, chalk] = got;
+  assert.equal(first.author, 'github:u3');
+  assert.equal(first.stats, undefined);
+  assert.equal(first.issueUrl, `${home}/issues/3`);
+  assert.deepEqual(second.stats, { votes: 7, works: 1 });
+  assert.equal(second.cover, attachment);
+  assert.equal(chalk.cover, undefined, 'a picture on another server is not a cover');
+  assert.equal((await lib.coverOf(second.ref)).mediaType, 'image/png');
+
+  // A new issue shows within ten minutes, waited for when the Recipes tab opens.
+  issues = [...issues, issue(13, `### 配方 · Recipe\n\n${encodeRecipe({ title: 'Ink', prompt: 'ink wash {{scene}}' })}`)];
+  now += 5 * 60_000;
+  await lib.ensure(5000);
+  assert.equal(lib.sources().find((s) => s.key === key).count, 3);
+  now += 6 * 60_000;
+  await lib.ensure(5000);
+  assert.equal(lib.sources().find((s) => s.key === key).count, 4);
+  // Closing an issue takes its recipe down; the others keep their refs.
+  issues = issues.filter((i) => i.number !== 3);
+  await lib.refresh();
+  assert.equal(lib.get(`${key}:desk-figurine-3`), undefined);
+  assert.equal(lib.get(`${key}:desk-figurine-7`).issue, 7);
+});
+
+test('a repository that cannot be read says why, and rests until it is due again', async () => {
+  const { dir, builtinDir } = fixtureDirs();
+  let now = 1_000_000;
+  const net = web({ 'https://api.github.com/repos/a/gone': 404, 'https://ghe.example.com/api/v3/repos/team/quiet': { has_issues: false } });
+  const lib = createLibrary({ dir, builtinDir, fetch: net.fetch, now: () => now });
+  lib.setSources(['https://github.com/a/gone', 'https://ghe.example.com/team/quiet']);
+  await lib.ensure(5000);
+  const [gone, quiet] = lib.sources().filter((s) => s.kind === 'remote');
+  assert.equal(gone.error, 'no such public repository');
+  assert.equal(quiet.error, 'issues are turned off in this repository');
+  const calls = net.calls.length;
+  now += 9 * 60_000;
+  await lib.ensure(5000);
+  assert.equal(net.calls.length, calls);
+  now += 2 * 60_000;
+  await lib.ensure(5000);
+  assert.deepEqual(net.calls.slice(calls), ['https://ghe.example.com/api/v3/repos/team/quiet'], 'the server repository is asked again after ten minutes, github.com after an hour');
+  assert.equal(recipesFromIssues('nonsense', 'x').length, 0);
 });

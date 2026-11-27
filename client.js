@@ -1093,9 +1093,9 @@ window.__ModuleLoader__.load({
       /** Put a picture made with a community recipe on its works wall: copy it, open the thread. */
       const showOff = (item) =>
         openRef(item.recipe.ref).then((recipe) => {
-          if (!recipe?.issue || !recipe.repo) return;
+          const url = issuePage(recipe);
+          if (!url) return;
           setSheet(null);
-          const url = `https://github.com/${recipe.repo}/issues/${recipe.issue}`;
           Promise.resolve()
             .then(() => copyImage(item.url))
             .then(
@@ -2030,6 +2030,8 @@ window.__ModuleLoader__.load({
     /** `github:ana` as `@ana`; any other author as written. */
     const authorName = (author) => String(author ?? '').replace(/^github:/, '@');
     const isRemote = (ref) => typeof ref === 'string' && ref !== '' && !/^(builtin|mine|image):/.test(ref);
+    /** The issue a community recipe lives in (its votes and works wall), on whichever server its source is. */
+    const issuePage = (recipe) => recipe?.issueUrl ?? (recipe?.issue && recipe.repo ? `https://github.com/${recipe.repo}/issues/${recipe.issue}` : null);
     const slotNames = (prompt) => {
       const names = [];
       for (const m of String(prompt ?? '').matchAll(SLOT_RE)) if (!names.includes(m[1])) names.push(m[1]);
@@ -2460,6 +2462,7 @@ window.__ModuleLoader__.load({
       const [extra, setExtra] = useState('');
       const [showPrompt, setShowPrompt] = useState(false);
       const [share, setShare] = useState(null);
+      const [target, setTarget] = useState(0);
       const [editing, setEditing] = useState(null);
       const [confirmDelete, setConfirmDelete] = useState(false);
       const [busy, setBusy] = useState('');
@@ -2513,6 +2516,7 @@ window.__ModuleLoader__.load({
         run('share', async () => {
           const body = await postJson(RECIPES_ROUTE, { action: 'submit', ref: recipe.ref, lang });
           if (!body?.ok) throw new Error(body?.reason);
+          setTarget(0);
           setShare(body);
         });
       const save = () =>
@@ -2582,7 +2586,7 @@ window.__ModuleLoader__.load({
         );
       }
       if (remote) {
-        const issueUrl = recipe.issue && recipe.repo ? `https://github.com/${recipe.repo}/issues/${recipe.issue}` : null;
+        const issueUrl = issuePage(recipe);
         credit.push(
           h(
             'div',
@@ -2625,8 +2629,27 @@ window.__ModuleLoader__.load({
         ];
       } else if (share) {
         const p = share.recipe ?? {};
+        const targets = share.targets ?? [{ url: share.url, issues: 'reviewed', default: true }];
+        const to = targets[target] ?? targets[0];
+        const open = to.issues === 'open';
+        const targetName = (x) => (x.title ? pickText(x.title, lang) : x.default ? t('communityDefault') : x.home);
         body = [
-          h('div', { key: 'note', style: { fontSize: 13, lineHeight: 1.6 } }, t('shareIntro')),
+          targets.length > 1
+            ? h(
+                'div',
+                { key: 'targets', role: 'radiogroup', 'aria-label': t('shareTo'), style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                h('span', { style: labelStyle }, t('shareTo')),
+                ...targets.map((x, i) =>
+                  h(
+                    'label',
+                    { key: x.key ?? i, 'data-dsh-images-share-target': x.key, style: { display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 13, cursor: 'pointer' } },
+                    h('input', { type: 'radio', name: 'dsh-images-share-target', checked: i === target, onChange: () => setTarget(i) }),
+                    h('span', null, targetName(x), h('span', { style: { ...hintStyle, marginLeft: 6 } }, t(x.issues === 'open' ? 'shareLive' : 'shareReviewed'))),
+                  ),
+                ),
+              )
+            : null,
+          h('div', { key: 'note', style: { fontSize: 13, lineHeight: 1.6 } }, open ? t('shareIntroOpen', { name: targetName(to) }) : t('shareIntro')),
           h(
             'div',
             { key: 'preview', 'data-dsh-images-share-preview': true, style: { border: `1px solid ${C.border1}`, borderRadius: 10, padding: '10px 12px', background: C.layer1, fontSize: 12.5, lineHeight: 1.55, display: 'flex', flexDirection: 'column', gap: 4 } },
@@ -2635,8 +2658,8 @@ window.__ModuleLoader__.load({
             h('div', null, h('b', null, t('editCategory')), t('colon'), t(`cat_${p.category}`), p.params?.size ? ` · ${p.params.size}` : '', p.params?.frames ? ` · GIF ${p.params.frames}` : ''),
             h('div', { style: { whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 180, overflowY: 'auto', color: C.muted } }, p.prompt),
           ),
-          h('div', { key: 'private', style: hintStyle }, t('sharePrivacy')),
-          h('div', { key: 'cover', style: hintStyle }, t(recipe.coverUrl ? 'shareCover' : 'shareNoCover')),
+          h('div', { key: 'private', style: hintStyle }, t(open ? 'sharePrivacyOpen' : 'sharePrivacy')),
+          h('div', { key: 'cover', style: hintStyle }, t(recipe.coverUrl ? (open ? 'shareCoverOpen' : 'shareCover') : open ? 'shareNoCoverOpen' : 'shareNoCover')),
         ];
       } else {
         body = [
@@ -2711,7 +2734,8 @@ window.__ModuleLoader__.load({
               primary: true,
               'data-dsh-images-open-github': true,
               onClick: () => {
-                openExternal(share.url);
+                const targets = share.targets ?? [{ url: share.url }];
+                openExternal((targets[target] ?? targets[0]).url);
                 setShare(null);
                 onToast(t('shareOpened'));
               },
@@ -2749,7 +2773,7 @@ window.__ModuleLoader__.load({
         );
       }
 
-      return h(DrawerFrame, { t, onClose, footer, title: editing ? t('editRecipe') : share ? t('shareCommunity') : title, width: 480 }, body);
+      return h(DrawerFrame, { t, onClose, footer, title: editing ? t('editRecipe') : share ? t('shareTitle') : title, width: 480 }, body);
     }
 
     /** Add a recipe someone shared: paste its code, or pick the picture that carries it. */
@@ -2833,7 +2857,16 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { key: s.url, 'data-dsh-images-source': s.key, style: { border: `1px solid ${C.border1}`, borderRadius: 10, padding: '9px 12px', display: 'flex', flexDirection: 'column', gap: 3 } },
-            h('div', { style: { display: 'flex', gap: 8, alignItems: 'baseline' } }, h('span', { style: { fontWeight: 600, fontSize: 13 } }, s.title ? pickText(s.title, lang) : s.default ? t('communityDefault') : s.url), h('span', { style: { flex: 1 } }), h('button', { type: 'button', style: { ...subtleLink, color: C.error }, onClick: () => setUrls(remote.filter((r) => r.url !== s.url).map((r) => r.url)) }, t('removeSource'))),
+            h(
+              'div',
+              { style: { display: 'flex', gap: 8, alignItems: 'baseline' } },
+              s.home
+                ? h('button', { type: 'button', style: { ...subtleLink, fontWeight: 600, fontSize: 13 }, onClick: () => openExternal(s.home) }, s.title ? pickText(s.title, lang) : s.default ? t('communityDefault') : s.url)
+                : h('span', { style: { fontWeight: 600, fontSize: 13 } }, s.title ? pickText(s.title, lang) : s.default ? t('communityDefault') : s.url),
+              s.issues === 'open' ? h('span', { style: hintStyle }, t('sourceIssues')) : null,
+              h('span', { style: { flex: 1 } }),
+              h('button', { type: 'button', style: { ...subtleLink, color: C.error }, onClick: () => setUrls(remote.filter((r) => r.url !== s.url).map((r) => r.url)) }, t('removeSource')),
+            ),
             h('div', { style: { ...hintStyle, wordBreak: 'break-all' } }, s.url),
             h('div', { style: hintStyle }, s.error && !s.count ? t('sourceError', { reason: s.error }) : t('sourceStatus', { n: s.count, when: s.fetchedAt ? new Date(s.fetchedAt).toLocaleString() : '—' })),
           ),
@@ -2841,7 +2874,7 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { style: { display: 'flex', gap: 8 } },
-          h('input', { value: url, placeholder: 'https://…/index.json', onChange: (e) => setUrl(e.target.value), 'aria-label': t('addSource'), style: { ...inputStyle, flex: 1 } }),
+          h('input', { value: url, placeholder: t('sourcePlaceholder'), onChange: (e) => setUrl(e.target.value), 'aria-label': t('addSource'), style: { ...inputStyle, flex: 1 } }),
           h(
             DrawerButton,
             {
@@ -3044,6 +3077,14 @@ window.__ModuleLoader__.load({
         sharePrivacy: "Shared publicly: the title, summary, prompt and parameters above. Your photos and conversations are not shared.",
         shareCover: "GitHub cannot take a picture through a link: download the cover here and drag it into the issue's Cover field.",
         shareNoCover: "This recipe has no cover yet: drag a picture made with it into the issue's Cover field.",
+        shareTitle: "Share recipe",
+        shareTo: "Share to",
+        shareLive: "live once submitted",
+        shareReviewed: "reviewed first",
+        shareIntroOpen: "This opens a new issue in {name} with the recipe filled in. Once you submit it, everyone who follows that repository sees it under Recipes; there is no review. Edit the issue to change the recipe, close it to take it down.",
+        sharePrivacyOpen: "Shared with everyone who can open that repository: the title, summary, prompt and parameters above. Your photos and conversations are not shared.",
+        shareCoverOpen: "GitHub cannot take a picture through a link: download the cover here and drag it into the issue. Its first picture is the cover.",
+        shareNoCoverOpen: "This recipe has no cover yet: drag a picture made with it into the issue. Its first picture is the cover.",
         needsInputs: "Works on {n} picture(s) of yours",
         needsInputsHint: "Attach them in the composer before you send.",
         slotDefault: "Default: {value}",
@@ -3059,7 +3100,7 @@ window.__ModuleLoader__.load({
         shareOpened: "Opened GitHub: check the issue and submit it there.",
         copyCode: "Copy recipe code",
         shareCard: "Share card",
-        shareCommunity: "Share to community",
+        shareCommunity: "Share to…",
         saveToMine: "Save to mine",
         edit: "Edit",
         confirmDelete: "Click again to delete",
@@ -3075,7 +3116,9 @@ window.__ModuleLoader__.load({
         sourcesTitle: "Recipe sources",
         communityHome: "Community on GitHub",
         refreshSources: "Refresh",
-        sourcesHint: "Each source is a recipe index on the web (a JSON file in the Images recipe format), read once a week. Anyone can run one for a team or a group of friends.",
+        sourcesHint: "A source is a GitHub repository whose open issues are its recipes (on your company's GitHub Enterprise, read every ten minutes, or on github.com, read hourly), or a recipe index on the web (a JSON file in the Images recipe format, read once a week). Anyone can start one for a team: a public repository with issues on is enough.",
+        sourcePlaceholder: "Repository link, or https://…/index.json",
+        sourceIssues: "· its issues are the recipes",
         sourcesNone: "No sources: only the built-in recipes and your own are shown.",
         communityDefault: "DSH Images community",
         removeSource: "Remove",
@@ -3267,6 +3310,14 @@ window.__ModuleLoader__.load({
         sharePrivacy: "公开分享的内容就是上面这些：标题、简介、提示词和参数。你的照片和对话不会被分享。",
         shareCover: "GitHub 不能通过链接带图片：先在这里下载封面，再把它拖进 issue 的「封面」栏。",
         shareNoCover: "这个玩法还没有封面：把一张用它画的图拖进 issue 的「封面」栏。",
+        shareTitle: "分享玩法",
+        shareTo: "分享到",
+        shareLive: "提交即上架",
+        shareReviewed: "审核后上架",
+        shareIntroOpen: "这会在「{name}」里新开一个 issue，配方已经填好。提交后，订阅这个仓库的人就能在「玩法」里看到它，不用审核。想修改就编辑这个 issue，想下架就关掉它。",
+        sharePrivacyOpen: "能打开这个仓库的人都能看到上面这些：标题、简介、提示词和参数。你的照片和对话不会被分享。",
+        shareCoverOpen: "GitHub 不能通过链接带图片：先在这里下载封面，再把它拖进 issue 里。issue 里的第一张图就是封面。",
+        shareNoCoverOpen: "这个玩法还没有封面：把一张用它画的图拖进 issue 里。issue 里的第一张图就是封面。",
         needsInputs: "需要你的 {n} 张图",
         needsInputsHint: "发送前在输入框里附上。",
         slotDefault: "默认：{value}",
@@ -3282,7 +3333,7 @@ window.__ModuleLoader__.load({
         shareOpened: "已打开 GitHub，确认无误后在那里提交。",
         copyCode: "复制配方串",
         shareCard: "分享卡",
-        shareCommunity: "分享到社区",
+        shareCommunity: "分享到…",
         saveToMine: "存到我的",
         edit: "编辑",
         confirmDelete: "再点一次确认删除",
@@ -3298,7 +3349,9 @@ window.__ModuleLoader__.load({
         sourcesTitle: "玩法订阅源",
         communityHome: "GitHub 上的社区",
         refreshSources: "刷新",
-        sourcesHint: "每个订阅源是网上的一份玩法索引（Images 配方格式的 JSON 文件），每周读取一次。任何人都可以给团队或朋友圈办一个。",
+        sourcesHint: "订阅源可以是一个 GitHub 仓库，它打开着的 issue 就是它的玩法（公司内网的 GitHub 每十分钟读取一次，github.com 每小时一次）；也可以是网上的一份玩法索引（Images 配方格式的 JSON 文件，每周读取一次）。谁都可以给团队办一个：建一个开着 issue 的 public 仓库就行。",
+        sourcePlaceholder: "仓库地址，或 https://…/index.json",
+        sourceIssues: "· issue 即玩法",
         sourcesNone: "没有订阅源：只显示内置玩法和你自己的。",
         communityDefault: "DSH Images 社区",
         removeSource: "移除",

@@ -1246,11 +1246,55 @@ function recipeOfPicture(library, item) {
   return from ?? recipeFromImage(item);
 }
 
-/** The new-issue page of the community repository, with the recipe filled in. */
-export function submitUrl(recipe, lang = 'en') {
+/** The new-issue page of a reviewed repository (the community's), its form filled in with the recipe. */
+export function submitUrl(recipe, lang = 'en', home = `https://github.com/${COMMUNITY_REPO}`) {
   const zh = String(lang).toLowerCase().startsWith('zh');
   const params = new URLSearchParams({ template: 'recipe.yml', title: `${zh ? '[配方]' : '[Recipe]'} ${pick(recipe.title, lang)}`, recipe: encodeRecipe(recipe) });
-  return `https://github.com/${COMMUNITY_REPO}/issues/new?${params}`;
+  return `${home}/issues/new?${params}`;
+}
+
+/**
+ * The new-issue page of a repository whose open issues are its recipes, the
+ * body filled in: no issue form is needed, so any repository can be one.
+ * @param {string} home - the repository's page, `https://<host>/<owner>/<repo>`
+ */
+export function repoSubmitUrl(recipe, lang = 'en', home) {
+  const zh = String(lang).toLowerCase().startsWith('zh');
+  const body = [
+    zh ? '<!-- 这是一个 DSH Images 玩法。提交后，订阅这个仓库的人在「玩法」里就能看到；关掉这个 issue 就是下架。 -->' : '<!-- A DSH Images recipe. Once submitted, everyone following this repository sees it under Recipes; closing the issue takes it down. -->',
+    '',
+    '### 封面 · Cover',
+    '',
+    zh ? '<!-- 把一张用这个玩法画的图拖到这里。 -->' : '<!-- Drag a picture made with this recipe here. -->',
+    '',
+    '',
+    '### 说明 · Notes',
+    '',
+    zh ? '<!-- 可选：适合什么、用哪个模型试过。 -->' : '<!-- Optional: what it suits, which model you tried it with. -->',
+    '',
+    '',
+    '### 配方 · Recipe',
+    '',
+    encodeRecipe(recipe),
+    '',
+  ].join('\n');
+  const params = new URLSearchParams({ title: `${zh ? '[玩法]' : '[Recipe]'} ${pick(recipe.title, lang)}`, body });
+  return `${home}/issues/new?${params}`;
+}
+
+/** Where a recipe of the user's can be shared: each source that takes new recipes as issues. */
+function shareTargets(library, recipe, lang) {
+  const remote = library.sources().filter((s) => s.kind === 'remote' && s.home);
+  // A repository where a new issue is live at once comes first: it is one the user added.
+  remote.sort((a, b) => (a.issues === b.issues ? 0 : a.issues === 'open' ? -1 : 1));
+  return remote.map((s) => ({
+    key: s.key,
+    title: s.title ?? null,
+    home: s.home,
+    issues: s.issues,
+    default: Boolean(s.default),
+    url: s.issues === 'open' ? repoSubmitUrl(recipe, lang, s.home) : submitUrl(recipe, lang, s.home),
+  }));
 }
 
 /** The recipe routes: the joined list, covers, and what the Recipes tab does. */
@@ -1410,7 +1454,9 @@ function mountRecipeRoutes(scope, webServer, library, store) {
           }
           if (action === 'submit') {
             if (recipe.origin !== 'mine' && recipe.origin !== 'image') return fail('only your own recipes can be shared to the community');
-            return { ok: true, url: submitUrl(recipe, body.lang ?? 'en'), recipe: portable(recipe) };
+            const targets = shareTargets(library, recipe, body.lang ?? 'en');
+            if (targets.length === 0) return fail('no source takes new recipes; add one under Sources');
+            return { ok: true, url: targets[0].url, targets, recipe: portable(recipe) };
           }
           return fail(`unknown action "${action}"`);
         });
