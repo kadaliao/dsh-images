@@ -146,9 +146,11 @@ dsh plugin --profile web add @kadaliao/dsh-images
 - **分享卡**：一张 PNG，有封面、标题和简介，配方藏在图片的文本块里。把它拖到「玩法」页（或在「导入」里选择）就能
   导入。**下载（附带配方）**对任何一张图都做同样的事。会抹掉图片元数据的软件只保留图片、丢掉配方，这时连同配方串一起发。
 - **分享到…**：只限你自己的玩法。从你订阅的源里选一个收 issue 投稿的，面板先完整展示将要公开的内容（标题、简介、
-  提示词、参数；你的照片和对话一律不会上传），再在那里打开一个已填好的 issue。拖一张图进去当封面，提交。投到
+  提示词、参数；你的照片和对话一律不会上传），再在那里打开一个已填好的 issue。GitHub 不能通过链接带图片，所以投到仓库
+  订阅源时，打开 issue 前会先把封面复制到剪贴板：在「封面」下面按 ⌘V 粘贴，提交。投到
   [kadaliao/dsh-images-recipes](https://github.com/kadaliao/dsh-images-recipes) 的，工作流检查后开 PR，合并后所有人
-  都能看到；投到仓库订阅源（见下）的，提交就上架。
+  都能看到；投到仓库订阅源（见下）的，提交就上架。你分享到仓库订阅源却漏了封面的玩法，卡片上会显示**缺封面 · 补上**：
+  点一下会复制封面并打开那个 issue，编辑 issue 把封面贴进去就行。
 
 **社区。** 「玩法」页默认订阅社区索引（`https://raw.githubusercontent.com/kadaliao/dsh-images-recipes/main/index.json`，
 GitHub 连不上时走 jsDelivr 镜像）：第一次打开时拉取，之后每周一次，缓存在 `~/.dsh/cache/images/recipes/`。封面只下载

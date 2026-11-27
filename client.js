@@ -1169,7 +1169,7 @@ window.__ModuleLoader__.load({
       );
 
       let body;
-      if (tab === 'recipes') body = h(RecipesView, { t, lang, data: recipes, failed: recipesFailed, onOpen: setSheet, onImportFile: (file) => importFile(file) });
+      if (tab === 'recipes') body = h(RecipesView, { t, lang, data: recipes, failed: recipesFailed, onOpen: setSheet, onFillCover: (r) => fillCover(t, r, setToast), onImportFile: (file) => importFile(file) });
       else if (failed) body = h('div', { style: { padding: 24, color: C.faint } }, t('unavailable'));
       else if (items === null) body = h('div', { style: { padding: 24, color: C.faint } }, '…');
       else if (items.length === 0) body = h('div', { style: { padding: '48px 24px', color: C.muted, maxWidth: 520, lineHeight: 1.6 } }, t('empty'));
@@ -2031,6 +2031,25 @@ window.__ModuleLoader__.load({
     const isRemote = (ref) => typeof ref === 'string' && ref !== '' && !/^(builtin|mine|image):/.test(ref);
     /** The issue a community recipe lives in (its votes and works wall), on whichever server its source is. */
     const issuePage = (recipe) => recipe?.issueUrl ?? (recipe?.issue && recipe.repo ? `https://github.com/${recipe.repo}/issues/${recipe.issue}` : null);
+    /**
+     * A recipe the user shared went up without its cover: put the cover on the
+     * clipboard (or download it, when the clipboard says no), then open the issue
+     * to paste it into. The copy comes first, while the click still counts.
+     */
+    function fillCover(t, recipe, onToast) {
+      const url = issuePage(recipe);
+      if (!url || !recipe.fillCoverUrl) return;
+      copyImage(recipe.fillCoverUrl)
+        .then(
+          () => true,
+          () => false,
+        )
+        .then((ok) => {
+          if (!ok) saveUrl(recipe.fillCoverUrl, `${recipe.id || 'recipe'}-cover`);
+          openExternal(url);
+          onToast(t(ok ? 'fillCoverCopied' : 'fillCoverSaved'));
+        });
+    }
     const slotNames = (prompt) => {
       const names = [];
       for (const m of String(prompt ?? '').matchAll(SLOT_RE)) if (!names.includes(m[1])) names.push(m[1]);
@@ -2294,7 +2313,7 @@ window.__ModuleLoader__.load({
       );
     }
 
-    function RecipeCard({ t, lang, recipe, onOpen }) {
+    function RecipeCard({ t, lang, recipe, onOpen, onFillCover }) {
       // A cover the listing could not measure yet (a community one not downloaded) takes its
       // shape once it loads.
       const [loaded, setLoaded] = useState(null);
@@ -2329,6 +2348,23 @@ window.__ModuleLoader__.load({
           { style: { position: 'relative', aspectRatio: cardAspect(coverRatio(recipe, loaded)), lineHeight: 0, overflow: 'hidden' } },
           h(RecipeCover, { recipe, lang, onSize }),
           badges.length > 0 ? h('div', { style: { position: 'absolute', top: 8, left: 8, display: 'flex', gap: 5, lineHeight: 1 } }, badges) : null,
+          recipe.fillCoverUrl && onFillCover
+            ? h(
+                'button',
+                {
+                  type: 'button',
+                  'data-dsh-images-fill-cover': recipe.ref,
+                  title: t('fillCoverTip'),
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    onFillCover(recipe);
+                  },
+                  onKeyDown: (e) => e.stopPropagation(),
+                  style: { position: 'absolute', top: 8, right: 8, font: 'inherit', fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 6, border: 'none', cursor: 'pointer', background: C.label, color: 'var(--dsw-alias-label-primary-foreground, #fff)', lineHeight: 1.5, whiteSpace: 'nowrap' },
+                },
+                t('fillCover'),
+              )
+            : null,
         ),
         h(
           'figcaption',
@@ -2359,7 +2395,7 @@ window.__ModuleLoader__.load({
     }
 
     /** The Recipes tab: search, filters and the grid of cards. */
-    function RecipesView({ t, lang, data, failed, onOpen, onImportFile }) {
+    function RecipesView({ t, lang, data, failed, onOpen, onFillCover, onImportFile }) {
       const [query, setQuery] = useState('');
       const [category, setCategory] = useState('');
       const [origin, setOrigin] = useState('');
@@ -2440,7 +2476,7 @@ window.__ModuleLoader__.load({
           : h(
               'div',
               { 'data-dsh-images-recipe-grid': true, style: { padding: '12px 24px 60px', columnWidth: 210, columnGap: 14 } },
-              shown.map((r) => h('div', { key: r.ref, style: { breakInside: 'avoid', marginBottom: 14 } }, h(RecipeCard, { t, lang, recipe: r, onOpen }))),
+              shown.map((r) => h('div', { key: r.ref, style: { breakInside: 'avoid', marginBottom: 14 } }, h(RecipeCard, { t, lang, recipe: r, onOpen, onFillCover }))),
             ),
       );
     }
@@ -2605,6 +2641,16 @@ window.__ModuleLoader__.load({
             issueUrl ? h('button', { type: 'button', style: subtleLink, onClick: () => openExternal(issueUrl) }, t('worksWall', { n: recipe.stats?.works ?? 0 })) : null,
           ),
         );
+        if (issueUrl && recipe.fillCoverUrl) {
+          credit.push(
+            h(
+              'div',
+              { key: 'fill', 'data-dsh-images-fill-note': true, style: { ...hintStyle, display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between' } },
+              h('span', null, t('fillCoverNote')),
+              h(DrawerButton, { primary: true, 'data-dsh-images-fill-cover': recipe.ref, onClick: () => fillCover(t, recipe, onToast) }, t('fillCoverButton')),
+            ),
+          );
+        }
       }
 
       let body;
@@ -3114,6 +3160,12 @@ window.__ModuleLoader__.load({
         openGitHub: "Open GitHub",
         shareOpened: "Opened GitHub: check the issue and submit it there.",
         shareOpenedPaste: "Opened GitHub, and the cover is on the clipboard: paste it under Cover, then submit.",
+        fillCover: 'No cover · Add it',
+        fillCoverTip: "You shared this recipe and its issue has no cover. This copies the cover and opens the issue: pick ··· → Edit on its text, paste the cover under Cover and save.",
+        fillCoverNote: "You shared this recipe and its issue has no cover. Add the cover copies it and opens the issue: pick ··· → Edit on its text, paste the cover under Cover and save.",
+        fillCoverButton: 'Add the cover',
+        fillCoverCopied: 'Opened the issue, and the cover is on the clipboard: ··· → Edit, paste it under Cover, then save.',
+        fillCoverSaved: 'Opened the issue and downloaded the cover: ··· → Edit, drag it under Cover, then save.',
         copyCode: "Copy recipe code",
         shareCard: "Share card",
         shareCommunity: "Share to…",
@@ -3348,6 +3400,12 @@ window.__ModuleLoader__.load({
         openGitHub: "打开 GitHub",
         shareOpened: "已打开 GitHub，确认无误后在那里提交。",
         shareOpenedPaste: "已打开 GitHub，封面已复制：在「封面」下面粘贴，再提交。",
+        fillCover: '缺封面 · 补上',
+        fillCoverTip: '这是你分享的玩法，issue 里还没有封面。点一下会复制封面并打开 issue：在正文右上角点 ··· → Edit，粘贴到「封面」下面再保存。',
+        fillCoverNote: '这是你分享的玩法，issue 里还没有封面。「补封面」会复制封面并打开 issue：在正文右上角点 ··· → Edit，粘贴到「封面」下面再保存。',
+        fillCoverButton: '补封面',
+        fillCoverCopied: '已打开 issue，封面已复制：点 ··· → Edit，粘贴到「封面」下面，再保存。',
+        fillCoverSaved: '已打开 issue，封面已下载：点 ··· → Edit，把它拖到「封面」下面，再保存。',
         copyCode: "复制配方串",
         shareCard: "分享卡",
         shareCommunity: "分享到…",

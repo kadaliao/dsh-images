@@ -375,6 +375,46 @@ test('a repository link is a source of its own: its open issues are the recipes'
   assert.equal(lib.get(`${key}:desk-figurine-7`).issue, 7);
 });
 
+test('a recipe shared without its cover is pointed out, with the cover to paste', async () => {
+  const { dir, builtinDir } = fixtureDirs();
+  const home = 'https://ghe.example.com/team/recipes';
+  const api = 'https://ghe.example.com/api/v3/repos/team/recipes';
+  const attachment = 'https://ghe.example.com/user-attachments/assets/0b7e-cover';
+  const cover = join(dir, 'cover.png');
+  writeFileSync(cover, PNG_2x3);
+  let issues = [];
+  const net = web({ [api]: { has_issues: true }, [`${api}/issues?state=open&per_page=100&page=1`]: () => issues });
+  const store = { get: (id) => (id === 'p1' ? { id: 'p1', file: cover, mediaType: 'image/png', prompt: 'a lighthouse at dusk' } : undefined) };
+  const lib = createLibrary({ dir, builtinDir, store, fetch: net.fetch, now: () => 1_000_000 });
+  lib.setSources([home]);
+  const key = sourceKey(home);
+  const neon = lib.saveMine({ title: 'Neon sign', prompt: 'a neon sign reading {{word}}' }, { cover: { file: cover, mediaType: 'image/png' } });
+  const bare = lib.saveMine({ title: 'Ink', prompt: 'ink wash {{scene}}' });
+  lib.noteShared(lib.get(neon.ref), [key]);
+  lib.noteShared(lib.get(bare.ref), [key]);
+  lib.noteShared(lib.get('image:p1'), ['s-elsewhere']);
+  const issue = (number, recipe, body = '') => ({ number, body: `${body}\n\n### 配方 · Recipe\n\n${encodeRecipe(recipe)}`, user: { login: 'me' }, created_at: '2026-11-27T00:00:00Z' });
+  issues = [
+    issue(5, lib.get(neon.ref)),
+    issue(6, lib.get(neon.ref), `<img src="${attachment}" />`),
+    issue(7, lib.get(bare.ref)),
+    issue(8, lib.get('image:p1')),
+    issue(9, { title: 'Chalk', prompt: 'chalk {{topic}}' }),
+  ];
+  await lib.refresh();
+  const from = () => Object.fromEntries(lib.all().filter((r) => r.origin === key).map((r) => [r.issue, r.coverFrom ?? null]));
+  // Only the user's own share that went up bare, and only when they have its cover.
+  assert.deepEqual(from(), { 5: neon.ref, 6: null, 7: null, 8: null, 9: null });
+  // Another library on the same folder remembers the share; a picture shared there counts too.
+  const again = createLibrary({ dir, builtinDir, store, fetch: net.fetch, now: () => 1_000_000 });
+  again.noteShared(again.get('image:p1'), [key]);
+  assert.equal(JSON.parse(readFileSync(join(dir, 'recipes', 'shared.json'), 'utf8')).shares.find((s) => s.ref === 'image:p1').sources.join(), `s-elsewhere,${key}`);
+  assert.deepEqual(Object.fromEntries(again.all().filter((r) => r.origin === key).map((r) => [r.issue, r.coverFrom ?? null])), { 5: neon.ref, 6: null, 7: null, 8: 'image:p1', 9: null });
+  // A cover that drops out of the issue, or out of the user's copy, ends it.
+  lib.removeMine(neon.id);
+  assert.equal(from()[5], null);
+});
+
 test('a repository that cannot be read says why, and rests until it is due again', async () => {
   const { dir, builtinDir } = fixtureDirs();
   let now = 1_000_000;

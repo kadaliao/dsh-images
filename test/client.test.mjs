@@ -1072,6 +1072,93 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
   }
 });
 
+test('a recipe shared without its cover says so on its card, and one click copies the cover and opens its issue', async () => {
+  const { exports, hooks } = await loadClient();
+  const { ctx, seen } = fakeContext();
+  exports.apply(ctx);
+  const panel = seen.slots.find((s) => s.options.name === 'main').component;
+  const stored = new Map([['dsh-images:tab', 'recipes']]);
+  globalThis.localStorage = { getItem: (k) => stored.get(k) ?? null, setItem: (k, v) => stored.set(k, v) };
+  const base = { summary: {}, category: 'illustration', tags: [], inputs: [], slots: [], prompt: 'p', params: {}, uses: 0, author: 'github:me' };
+  const recipes = [
+    { ...base, ref: 's1:neon-5', origin: 's1', id: 'neon-5', title: { en: 'Neon sign' }, issue: 5, issueUrl: 'https://ghe.example.com/team/recipes/issues/5', fillCoverUrl: '/__dsh_images/recipe-cover/mine%3Aneon?v=9' },
+    { ...base, ref: 's1:ink-6', origin: 's1', id: 'ink-6', title: { en: 'Ink' }, issue: 6, issueUrl: 'https://ghe.example.com/team/recipes/issues/6' },
+  ];
+  globalThis.fetch = async (url) => {
+    if (String(url).startsWith('/__dsh_images/recipe-cover/')) return { ok: true, blob: async () => ({ type: 'image/png', from: String(url) }) };
+    if (String(url).startsWith('/__dsh_images/recipes')) return { ok: true, json: async () => ({ ok: true, sources: [{ key: 's1', kind: 'remote', count: 2 }], recipes }) };
+    return { ok: true, json: async () => ({ items: [], hasMore: false, total: 0 }) };
+  };
+  const opened = [];
+  const clipboard = [];
+  const saved = [];
+  globalThis.window.open = (url) => opened.push({ url, clipboard: clipboard.length, saved: saved.length });
+  globalThis.ClipboardItem = class {
+    constructor(items) {
+      this.items = items;
+    }
+  };
+  let refuse = false;
+  Object.defineProperty(globalThis.navigator, 'clipboard', {
+    configurable: true,
+    value: {
+      write: async (items) => {
+        if (refuse) throw new Error('denied');
+        clipboard.push(await items[0].items['image/png']);
+      },
+    },
+  });
+  globalThis.document = { body: { style: {}, appendChild() {} }, addEventListener() {}, removeEventListener() {}, createElement: () => ({ click() { saved.push({ href: this.href, download: this.download }); }, remove() {} }) };
+  try {
+    hooks.reset();
+    panel({});
+    await flush();
+    await flush();
+    hooks.rewind();
+    let tree = panel({});
+    const buttons = findAll(tree, (n) => n.props['data-dsh-images-fill-cover']);
+    assert.deepEqual(buttons.map((b) => b.props['data-dsh-images-fill-cover']), ['s1:neon-5']);
+    assert.match(collect(buttons[0]).join(''), /No cover · Add it/);
+    assert.match(buttons[0].props.title, /You shared this recipe and its issue has no cover/);
+    let stopped = false;
+    buttons[0].props.onClick({ stopPropagation: () => (stopped = true) });
+    await flush();
+    await flush();
+    assert.equal(stopped, true, 'the card does not open as well');
+    // The cover is on the clipboard before the issue opens.
+    assert.deepEqual(clipboard, [{ type: 'image/png', from: '/__dsh_images/recipe-cover/mine%3Aneon?v=9' }]);
+    assert.deepEqual(opened, [{ url: 'https://ghe.example.com/team/recipes/issues/5', clipboard: 1, saved: 0 }]);
+    hooks.rewind();
+    tree = panel({});
+    assert.match(collect(tree).join(' '), /Opened the issue, and the cover is on the clipboard: ··· → Edit, paste it under Cover/);
+    assert.equal(findAll(tree, (n) => n.props['data-dsh-images-drawer']).length, 0);
+
+    // Its sheet says so too; when the clipboard says no, the cover is downloaded to drag in.
+    findAll(tree, (n) => n.props['data-dsh-images-recipe'] === 's1:neon-5')[0].props.onClick();
+    hooks.rewind();
+    tree = panel({});
+    const drawer = findAll(tree, (n) => n.props['data-dsh-images-drawer'])[0];
+    assert.match(collect(findAll(drawer, (n) => n.props['data-dsh-images-fill-note'])[0]).join(' '), /You shared this recipe and its issue has no cover/);
+    refuse = true;
+    findAll(drawer, (n) => n.props['data-dsh-images-fill-cover'])[0].props.onClick();
+    await flush();
+    await flush();
+    assert.deepEqual(saved, [{ href: '/__dsh_images/recipe-cover/mine%3Aneon?v=9', download: 'neon-5-cover' }]);
+    assert.deepEqual(opened.at(-1), { url: 'https://ghe.example.com/team/recipes/issues/5', clipboard: 1, saved: 1 });
+    hooks.rewind();
+    tree = panel({});
+    assert.match(collect(tree).join(' '), /Opened the issue and downloaded the cover: ··· → Edit, drag it under Cover/);
+  } finally {
+    // The open sheet lets go of the document before it goes.
+    hooks.runCleanups();
+    delete globalThis.localStorage;
+    delete globalThis.window.open;
+    delete globalThis.ClipboardItem;
+    delete globalThis.navigator.clipboard;
+    delete globalThis.document;
+  }
+});
+
 test('a recipe card takes its cover\'s own shape, not the recipe size\'s, and the open recipe shows the cover whole', async () => {
   const { exports, hooks } = await loadClient();
   const { ctx, seen } = fakeContext();

@@ -186,11 +186,13 @@ Every recipe can be passed on three ways, none of which needs a server:
   alongside.
 - **Share to…** — for your own recipes: pick one of the sources you follow that takes recipes as
   issues. The panel shows exactly what will be public (title, summary, prompt, parameters; never
-  your photos or conversations), then opens a prefilled issue there. Drag a picture into it as the
-  cover and submit. In
+  your photos or conversations), then opens a prefilled issue there. GitHub takes no picture
+  through a link, so opening a repository source's issue copies the cover first: paste it under
+  Cover (⌘V) and submit. In
   [kadaliao/dsh-images-recipes](https://github.com/kadaliao/dsh-images-recipes) a workflow checks it
   and opens a pull request, and once it is merged everyone sees it; in a repository source (below)
-  it is live as soon as it is submitted.
+  it is live as soon as it is submitted. A recipe you shared there that went up without its cover
+  says **No cover · Add it** on its card: that copies the cover and opens the issue, to edit it in.
 
 **The community.** The Recipes tab follows the community index
 (`https://raw.githubusercontent.com/kadaliao/dsh-images-recipes/main/index.json`, with the jsDelivr

@@ -1344,14 +1344,25 @@ function mountRecipeRoutes(scope, webServer, library, store) {
       return null;
     }
   };
+  /** The cover of one of the user's recipes or pictures, for an issue shared without it. */
+  const fillCoverUrl = (ref) => {
+    let version = 0;
+    try {
+      version = Math.round(statSync(library.coverFileOf(library.get(ref))).mtimeMs);
+    } catch {
+      version = 0;
+    }
+    return `${COVER_ROUTE}/${encodeURIComponent(ref)}?v=${version}`;
+  };
   const publicRecipe = (r, uses = usesOf()) => {
-    const { coverFile, ...rest } = r;
+    const { coverFile, coverFrom, ...rest } = r;
     const cover = hasCover(r);
     const version = String(coverFile ?? r.cover ?? '').length + (r.updatedAt ?? 0);
     const dims = cover ? coverSizeOf(r) : null;
     return {
       ...rest,
       ...(cover ? { coverUrl: `${COVER_ROUTE}/${encodeURIComponent(r.ref)}?v=${version}` } : {}),
+      ...(coverFrom ? { fillCoverUrl: fillCoverUrl(coverFrom) } : {}),
       ...(dims ? { coverWidth: dims.width, coverHeight: dims.height } : {}),
       uses: uses.get(r.ref) ?? 0,
     };
@@ -1467,6 +1478,8 @@ function mountRecipeRoutes(scope, webServer, library, store) {
             if (recipe.origin !== 'mine' && recipe.origin !== 'image') return fail('only your own recipes can be shared to the community');
             const targets = shareTargets(library, recipe, body.lang ?? 'en');
             if (targets.length === 0) return fail('no source takes new recipes; add one under Sources');
+            // Remembered so the issue it becomes can be found again if it goes up without its cover.
+            library.noteShared(recipe, targets.filter((t) => t.issues === 'open').map((t) => t.key));
             return { ok: true, url: targets[0].url, targets, recipe: portable(recipe) };
           }
           return fail(`unknown action "${action}"`);
