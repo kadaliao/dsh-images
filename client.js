@@ -19,6 +19,10 @@ window.__ModuleLoader__.load({
     }
 
     const NS = 'images';
+    // This client half's version; test/updates.test.mjs keeps it equal to package.json.
+    const VERSION = '0.9.0';
+    // The version and GitHub link beside the panel's title, from the shared update block once apply(ctx) has run.
+    let About = null;
     const TOOL_NAME = 'generate_image';
     const PANEL_ID = 'images';
     const LIST_ROUTE = '/__dsh_images/list';
@@ -1134,6 +1138,7 @@ window.__ModuleLoader__.load({
           },
         },
         h('span', { style: { fontSize: 15.5, fontWeight: 640, color: C.primary } }, t('title')),
+        About ? h(About, { style: { alignSelf: 'center' } }) : null,
         h(
           'span',
           { role: 'tablist', style: { display: 'inline-flex', gap: 2, padding: 2, borderRadius: 9, background: C.hover, alignSelf: 'center' } },
@@ -3538,6 +3543,10 @@ window.__ModuleLoader__.load({
     // comes next finds it, opens the view again (`options.reopen`) and says how it went. Copies of other versions
     // share it, so its shape only grows:
     //   handoff = { phases: { [name]: { step, from, to, requestId, title, icon, reopen, ... } }, listeners: Set<() => void> }
+    //
+    // `About` is the plugin's version and a link to its repository, for the plugin to put beside its title.
+    // `options.version` is the client half's own version (test/updates.test.mjs keeps it equal to package.json);
+    // the repository is https://github.com/kadaliao/<package name> unless `options.repo` says otherwise.
     function kadaliaoUpdates(ctx, options) {
       const HANDOFF_KEY = '__kadaliaoDshSelfUpdate';
       const SNOOZE_MS = 24 * 3600e3;
@@ -3552,6 +3561,10 @@ window.__ModuleLoader__.load({
       const { useEffect, useState } = React;
       const self = String(options.name);
       const STORE_KEY = `kadaliao-dsh-update:${self}`;
+      const VERSION = typeof options.version === 'string' ? options.version : '';
+      const REPO = typeof options.repo === 'string' && options.repo !== ''
+        ? options.repo
+        : `https://github.com/kadaliao/${self.replace(/^@[^/]+\//, '')}`;
       const now = typeof options.now === 'function' ? options.now : () => Date.now();
       const g = typeof window === 'object' && window !== null ? window : globalThis;
 
@@ -3577,6 +3590,8 @@ window.__ModuleLoader__.load({
           failedRestored: 'Not updated, {version} is back: {reason}',
           failedRemoved: 'Not updated, and {version} could not be put back. Install it again from Plugins.',
           unknown: 'No answer from Harness; check Plugins to see which version is installed.',
+          aboutVersion: 'Version {version}',
+          aboutSource: 'Source code on GitHub',
         },
         zh: {
           title: '{name} 有新版本 {version}',
@@ -3599,6 +3614,8 @@ window.__ModuleLoader__.load({
           failedRestored: '没有更新，已装回 {version}：{reason}',
           failedRemoved: '没有更新，{version} 也没能装回。请到「插件」里重新安装。',
           unknown: 'Harness 没有回音，请到「插件」里看看装的是哪个版本。',
+          aboutVersion: '版本 {version}',
+          aboutSource: '在 GitHub 上查看源码',
         },
       };
 
@@ -4113,9 +4130,44 @@ window.__ModuleLoader__.load({
         };
       }
 
+      // --- version and repository -------------------------------------------------------------------
+
+      // GitHub's mark (Octicons mark-github), drawn in the text colour.
+      const GITHUB_MARK = 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z';
+
+      /** The plugin's version and a GitHub mark linking to its repository, small and muted; `style` overrides the colour or spacing. */
+      function About(props) {
+        const style = props?.style ?? null;
+        const size = typeof props?.size === 'number' ? props.size : 14;
+        return h(
+          'span',
+          {
+            'data-kadaliao-about': self,
+            style: { display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, fontSize: 12, lineHeight: '16px', fontWeight: 400, color: C.faint, whiteSpace: 'nowrap', ...style },
+          },
+          VERSION === ''
+            ? null
+            : h('span', { 'data-kadaliao-version': VERSION, title: say('aboutVersion', { version: VERSION }), style: { fontVariantNumeric: 'tabular-nums', userSelect: 'text' } }, `v${VERSION}`),
+          h(
+            'a',
+            {
+              href: REPO,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+              title: say('aboutSource'),
+              'aria-label': say('aboutSource'),
+              'data-kadaliao-repo': REPO,
+              onClick: (event) => event?.stopPropagation?.(),
+              style: { display: 'inline-flex', alignItems: 'center', color: 'inherit', padding: 2, margin: -2, borderRadius: 4, textDecoration: 'none' },
+            },
+            h('svg', { viewBox: '0 0 16 16', width: size, height: size, fill: 'currentColor', 'aria-hidden': 'true', style: { display: 'block' } }, h('path', { d: GITHUB_MARK })),
+          ),
+        );
+      }
+
       // --- joining ---------------------------------------------------------------------------------
 
-      const api = { opens, opened, check, update, later, skip, close, shown, readStore, choose, outcomeOf, headline, local, handoff };
+      const api = { opens, opened, check, update, later, skip, close, shown, readStore, choose, outcomeOf, headline, local, handoff, About, version: VERSION, repo: REPO };
       if (typeof ctx.effect === 'function') {
         ctx.effect(() => {
           handoff.listeners.add(notify);
@@ -4190,7 +4242,8 @@ window.__ModuleLoader__.load({
       apply(ctx) {
         ctx.effect(() => ctx.locale.register(NS, DICTIONARY), 'images: dictionaries');
         // This plugin's update reminder, checked when its own view opens (see the block above).
-        const updates = kadaliaoUpdates(ctx, { React, name: '@kadaliao/dsh-images', reopen: () => openPanel(ctx) });
+        const updates = kadaliaoUpdates(ctx, { React, name: '@kadaliao/dsh-images', version: VERSION, reopen: () => openPanel(ctx) });
+        About = updates.About;
         let bound = null;
         const tr = (key, params) => {
           try {
