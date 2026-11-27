@@ -20,7 +20,7 @@ window.__ModuleLoader__.load({
 
     const NS = 'images';
     // This client half's version; test/updates.test.mjs keeps it equal to package.json.
-    const VERSION = '0.9.0';
+    const VERSION = '0.9.1';
     // The version and GitHub link beside the panel's title, from the shared update block once apply(ctx) has run.
     let About = null;
     const TOOL_NAME = 'generate_image';
