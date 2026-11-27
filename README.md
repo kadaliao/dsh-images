@@ -1,270 +1,210 @@
-# Images
+# 图片
 
-English | [简体中文](README.zh-CN.md)
+简体中文 | [English](README.en.md)
 
-**Ask for a picture and get one.**
+**要一张图，就给你一张图。**
 
-Gives the conversation model a `generate_image` tool backed by the image model your provider serves.
-Say "draw me a poster for the launch" and the picture appears in the conversation, right where it
-was made. Everything ever drawn is collected in an **Images** panel: a gallery to browse, enlarge
-and download. Its **Recipes** tab holds tested prompt templates to start from — 191 built in, your
-own, and the community's — and every recipe can be passed on as a line of text, a picture, or a
-community submission.
+给对话模型一个 `generate_image` 工具，用你供应商提供的生图模型出图。说一句"给发布会画张海报"，
+图就出现在对话里、就在它生成的位置。画过的所有图都收在一个「图片」面板里：瀑布流浏览、放大、下载。
+面板的「玩法」页收着试过效果的提示词模板：191 个内置的、你自己的、社区的，一键套用；每个玩法都能变成一段文字、
+一张图，或者投稿到社区。
 
 ```
 > 画一张海报：深蓝夜空下的灯塔，极简扁平风，标题写 "Night Shift"
   ▸ Completed in 24s
-  [ the poster ]
-  Here is the poster: a lighthouse under a deep-blue night sky, flat style, titled "Night Shift".
+  [ 海报 ]
+  海报画好了：深蓝夜空下的灯塔，扁平风格，标题 "Night Shift"。
 ```
 
-## Install
+## 安装
 
-Add the [DSH Plugins](https://github.com/kadaliao/dsh-plugins) index in DeepSeek Harness (**Plugins → Discover → Sources**):
+在 DeepSeek Harness 里加入 [DSH Plugins](https://github.com/kadaliao/dsh-plugins) 的索引（**Plugins → Discover → Sources**）：
 
 ```
 https://raw.githubusercontent.com/kadaliao/dsh-plugins/main/marketplace.json
 ```
 
-then install **Images**. The Discover tab is part of the experimental **Custom plugin markets**
-feature; turn it on under **Plugins → Experimental plugins** if you don't see it.
+然后安装 **Images**。Discover 标签属于实验性的 **Custom plugin markets** 功能；看不到的话先在
+**Plugins → Experimental plugins** 里打开。
 
-Without Discover, paste the package name into the plugin manager:
+不用 Discover 的话，把包名贴进插件管理器：
 
 ```
 @kadaliao/dsh-images
 ```
 
-Or from a terminal with the `dsh` CLI (`--profile desktop` for the desktop app; restart Harness
-afterwards):
+也可以在终端里用 `dsh` 命令行装（桌面版用 `--profile desktop`，装完重启 Harness）：
 
 ```
 dsh plugin --profile web add @kadaliao/dsh-images
 ```
 
-For the latest unreleased code, use the Git spec `git+https://github.com/kadaliao/dsh-images.git#main` instead.
+想用还没发布的最新代码，改用 Git spec `git+https://github.com/kadaliao/dsh-images.git#main`。
 
-Then open **Images** in the left sidebar, click **Settings**, and name the image model (see
-[Settings](#settings)). Refresh the page once after installing.
+装好后打开左侧栏的**图片**，点**设置**，填上生图模型（见[设置](#设置)）。安装后刷新一次页面。
 
-## Updates
+## 更新
 
-Each time you open the Images panel, the plugin checks whether a newer version of itself is out;
-opening it again within a minute reuses the answer, and nothing checks in the background. The check
-goes through Harness's own plugin manager, the same check as the Versions section in **Plugins**, and
-asks the npm registry only about this package. A newer version shows as a bar across the top of the
-panel. **Update** has Harness install it, after checking that it works with your Harness; if the
-install fails, the version you had is put back. While it updates, the panel closes, and it opens again
-once the new version is in. **Later** hides the bar for a day, **Skip this version** until the next
-one. Copies installed from a folder or from Git are not checked.
+每次打开图片面板，插件会检查一次自己有没有新版本；一分钟内再打开用上次的结果，后台不定时检查。检查走 Harness 自己的插件管理，和「插件」页「版本」一栏是同一个检查，只向 npm 查询这一个包。有新版本时，面板顶部会出现一条提示：点「更新」由 Harness 安装新版本，装之前先确认它和你的 Harness 兼容，装失败会把原来的版本装回去。更新时面板会先关闭，装好后自动重新打开。「稍后」一天内不再提醒，「跳过此版本」到下一个版本出来前不再提醒。从本地文件夹或 Git 装的不检查。
 
-## In the conversation
+## 在对话里
 
-When you ask for an image, the model calls `generate_image` with a detailed prompt. While the
-provider draws, a shimmering placeholder sits in the turn's process fold with the prompt under it.
-When the picture arrives it is shown as a row of the conversation, above the model's reply, so it
-stays visible after the fold closes. Several images (`n` up to 4) sit side by side.
+你要图时，模型会带着一段写得很细的提示词调用 `generate_image`。供应商出图期间，回合的过程折叠里
+有一块闪动的占位图，下面是提示词。图回来后，它作为对话里独立的一行显示在模型回复上方，折叠收起
+后依然可见。一次要几张（`n` 最多 4）就并排放。
 
-Hover an image for its controls: **download** and a **⋯ menu** (download, copy the prompt). Click
-it to enlarge. In the viewer, the mouse wheel (or a trackpad pinch) zooms around the pointer, from 50% to 1000%; the `−` / `+` buttons in the top bar zoom in steps, and clicking the percentage between them fits the picture back to the screen. Drag a zoomed picture to pan, double-click to toggle 2×. Keys: `+` `-` zoom, `0` fits, `←` `→` step between the images of that call, `Esc` closes.
+鼠标移到图上出现控件：**下载**，以及 **⋯ 菜单**（下载、复制提示词）。点图放大。查看器里滚轮（或触控板双指捏合）以鼠标位置为中心缩放，
+范围 50%–1000%；顶栏的 `−` / `+` 按钮逐级缩放，点中间的百分比回到适应屏幕。放大后可拖动平移，双击在 1× 和 2× 之间切换。
+快捷键：`+` `-` 缩放，`0` 适应屏幕，`←` `→` 在这次调用的几张图之间切换，`Esc` 关闭。
 
-Under the picture a line says which model drew it, its pixel size and what it cost
-(`gpt-image-1.5 · 1024×1024 · ≈ $0.017`). The model also receives the picture (on a model that
-takes image input), so it can check its own work and describe what it drew.
+图下面有一行小字：哪个模型画的、像素尺寸、花了多少钱（`gpt-image-1.5 · 1024×1024 · ≈ $0.017`）。
+模型自己也会收到这张图（在支持图片输入的模型上），所以它能检查自己画得对不对，并描述画了什么。
 
-## Input images
+## 参考图输入
 
-`generate_image` also takes pictures in. Attach a photo or screenshot, point at a file, or refer to
-something it drew earlier, and say what to do with it — "make the cat in this photo wear a party
-hat", "put these two characters in one poster", "this character, running, as a GIF". The model
-passes them in `images` (up to 16), each one of:
+`generate_image` 也能吃图。贴一张照片或截图、指一个文件、或者引用它之前画过的图，再说要怎么改——
+「给这张照片里的猫戴顶派对帽」「把这两个角色放进同一张海报」「这个角色在跑步，做成 GIF」。模型会把它们
+放进 `images`（最多 16 张），每一项可以是：
 
-- the attachment id the conversation shows with an image (`sha256:…`),
-- the id of an image the tool made earlier (every result names its ids),
-- a file path: absolute, `~/…`, or relative to the session's working directory.
+- 对话里图片旁边显示的附件 ID（`sha256:…`）；
+- 这个工具之前生成的图片 ID（每次结果里都会写出 ID）；
+- 文件路径：绝对路径、`~/…`，或相对于会话工作目录的路径。
 
-With input images the request goes to the provider's `POST /images/edits` (multipart, the same
-model and fields) instead of `/images/generations`. Inputs are PNG, JPEG or WebP; an earlier GIF is
-sent as its sprite sheet, so an animation can be revised. The tool card shows
-`from N input image(s)`. The provider and image model must support edits (OpenAI's `gpt-image-*`
-do; many gateways pass it through).
+带参考图时请求发到供应商的 `POST /images/edits`（multipart，模型和其他参数不变），而不是
+`/images/generations`。输入支持 PNG、JPEG、WebP；之前生成的 GIF 会以它的精灵图发出去，所以动图也能接着改。
+工具卡片上会显示「基于 N 张参考图」。供应商和生图模型需要支持 edits（OpenAI 的 `gpt-image-*` 支持，
+多数网关会透传）。
 
-## Animated GIFs
+## 动图（GIF）
 
-Ask for a GIF, an animation or a sticker ("做一张阿比西尼亚猫追毛线球的 GIF") and the model calls
-`generate_image` with `frames` (4, 6, 9 or 16) and, optionally, `frameMs` (time per frame, default
-100 ms). Image models only draw stills, so the tool asks for one **sprite sheet** — a grid of that
-many frames of the same scene, one continuous loop — then cuts it into frames and encodes a looping
-GIF itself (frames up to 480 px, one shared palette, ordered dithering so colours do not flicker).
-This costs one image request, the same as a still.
+要 GIF、动图、表情包（"做一张阿比西尼亚猫追毛线球的 GIF"）时，模型调用 `generate_image` 时会带上
+`frames`（4、6、9 或 16 帧），可选 `frameMs`（每帧时长，默认 100 毫秒）。生图模型只会画静态图，
+所以插件让它画一张**精灵图**——同一场景、同一段循环动作的若干帧排成网格——再自己切帧、编码成
+无限循环的 GIF（每帧最长边 480 px，全片共用调色板，用有序抖动避免颜色闪烁）。只发一次生图请求，
+费用和一张静态图一样。
 
-The GIF is what you see in the conversation and the panel (`… · GIF · 16 frames · …`) and what
-download saves. The Harness keeps attachments single-frame, so the model is given the sprite sheet
-as its picture instead; the sheet is also kept beside the GIF (`<id>-sheet.png`) and removed with it.
-Motion is as smooth as the model keeps the frames consistent: simple, repeating motion (running,
-waving, bouncing, spinning) works best.
+对话里和面板里显示的、下载得到的都是 GIF（`… · GIF · 16 帧 · …`）。Harness 的附件只存单帧图，
+所以交给模型看的是那张精灵图；精灵图也存在 GIF 旁边（`<id>-sheet.png`），删 GIF 时一起删。
+动作是否顺滑取决于模型帧间画得是否一致：奔跑、挥手、弹跳、旋转这类简单重复的动作效果最好。
 
-OpenAI's **gpt-image** models (`gpt-image-1.5`, `gpt-image-2`, `gpt-image-2.5-*`, `gpt-image-2.6-*`, …,
-with or without a gateway prefix) are known to draw a sheet that lines up. With any other model the GIF is still made, but the result and the
-settings drawer warn that the model may not support GIF generation: a model that ignores the grid
-gives a GIF that flickers between parts of one picture. More families are added as they are verified.
+目前确认 OpenAI 的 **gpt-image** 系列（`gpt-image-1.5`、`gpt-image-2`、`gpt-image-2.5-*`、`gpt-image-2.6-*` 等，带不带网关前缀都行）
+能画出对得齐的精灵图。换成非 GPT 系列的模型
+仍会生成 GIF，但结果下方和设置抽屉里都会提示「该模型不一定支持 GIF 素材生成」：不按网格出图的模型，做出来的 GIF
+只是同一张图的不同局部来回闪。以后确认了其他模型可用，再加进来。
 
-## The Images panel
+## 「图片」面板
 
-**Images** in the left sidebar (or `/images`) opens a gallery of every picture generated in any
-conversation, newest first, as a masonry grid of cards. Each card shows the prompt, the model, the
-pixel size, the cost and when it was made; the header adds up what was spent. Hover a card for **download** and the **⋯ menu** (download, copy
-prompt, make one like this, make a recipe template, save as a recipe as is, download with its recipe, remove from gallery); click it to enlarge and step through the gallery with the arrow keys.
-The viewer's **Open conversation** button takes you to the conversation the picture was drawn in
-(hover it for that conversation's title). An archived conversation stays shut: the viewer says so
-and offers **Unarchive and open** (for a subagent's picture, that unarchives the conversation it ran
-under). A deleted conversation is reported as gone.
-The panel keeps itself up to date while open, and loads older images as you scroll.
+左侧栏的 **Images**（或输入 `/images`）打开图库：所有会话里生成过的图，最新的在前，瀑布流卡片。
+每张卡片显示提示词、模型、像素尺寸、费用和生成时间；标题栏累计已花的钱。悬停出现**下载**和 **⋯ 菜单**（下载、复制提示词、
+做同款、做成玩法模板、原样存为玩法、下载（附带配方）、从图库移除）；点击放大，方向键在整个图库里翻页。查看器顶栏的**打开所属会话**跳到画这张图的会话（悬停可看会话标题）；
+会话已归档时不会直接跳转，查看器会提示，并给出**取消归档并打开**（子代理画的图，取消归档的是它所在的上级会话）；会话已删除时提示它已不存在。面板打开时会自动刷新，往下滚动加载更早的。
 
-Removing a picture from the gallery deletes the plugin's copy of it; the conversation it came from
-still shows it, through the Harness attachment store.
+从图库移除只删插件自己存的那份；它所在的会话里仍然能看到这张图（走 Harness 的附件存储）。
 
-## Recipes
+## 玩法
 
-A recipe (玩法) is a tested prompt template with a few blanks, the size or animation it is drawn
-with, and credit to whoever made it. The panel's **Recipes** tab lists them as cards with a cover, a
-search box and filters by kind (photo, hand-drawn, magazine & poster, infographic, 3D, sticker &
-GIF, illustration, product, comic) and by origin (built-in, mine, community).
+一个玩法（配方）就是一段试过效果的提示词模板：带几个空，定好尺寸或动图参数，注明出处。面板的「玩法」页把它们
+排成带封面的卡片，可以搜索，按类别（照片变身、手绘、杂志海报、信息图、3D、贴纸动图、插画、产品、漫画）和来源
+（内置、我的、社区）筛选。
 
-Open one to see its cover, what it needs and where it came from. Fill in its blanks (each shows its
-default), add anything else you want, and press **Start a conversation with it**: a new conversation
-opens in the plugin's own **Images** workspace (not the one you were working in) with a message naming
-the recipe in the composer. The workspace's folder is `~/.dsh/images/workspace`, made and added to the
-sidebar the first time; `workdir` moves it. A recipe that works on your pictures (a photo
-to turn into a figurine, line art to colour) says so; attach them before you send. The model calls
-`generate_image` with the recipe's ref and the blanks, and the tool fills the template itself, so the
-tested wording reaches the image model as written; anything you added goes after it. The picture
-is labelled with its recipe in the conversation and the gallery; click the label to open the recipe.
+点开一个，能看到封面、它需要什么、从哪来。填好空（每个空都显示默认值），再写点别的要求，点**用它开始创作**：
+会在插件自己的**图片**工作区（而不是你正在用的那个）新开一个对话，输入框里是一条写明玩法的消息。这个工作区的文件夹是
+`~/.dsh/images/workspace`，第一次用时自动创建并加到侧栏；`workdir` 可以换一个。需要你的图的玩法（把照片做成手办、给线稿上色）会提示你，发送前
+在输入框里附上即可。模型带着玩法的 ref 和填好的空调用 `generate_image`，由工具自己套模板，所以试过的原文原样
+交给生图模型，你额外的要求接在后面。画出来的图在对话和图库里都标着用的玩法，点标签就能打开它。
 
-The model can find recipes by itself, too: ask "有什么杂志封面的玩法？" or "draw this as a chalkboard
-lesson" and it searches them with the `image_recipes` tool.
+模型也会自己找玩法：问一句"有什么杂志封面的玩法？"或者"把这个画成黑板课堂"，它会用 `image_recipes` 工具去搜。
 
-**Built-in recipes.** 191, across photo makeovers, hand-drawn, editorial and posters, infographics,
-3D, stickers and GIF loops, illustration, product shots and comics — adapted from the most-starred
-permissively licensed prompt collections on GitHub —
-[JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) (MIT),
-[PicoTrex/Awesome-Nano-Banana-images](https://github.com/PicoTrex/Awesome-Nano-Banana-images)
-(Apache-2.0), [YouMind-OpenLab/awesome-gpt-image-2](https://github.com/YouMind-OpenLab/awesome-gpt-image-2)
-and [awesome-nano-banana-pro-prompts](https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts)
-(CC BY 4.0), [ZeroLu/awesome-nanobanana-pro](https://github.com/ZeroLu/awesome-nanobanana-pro)
-(MIT), [freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2) (MIT),
-[Evolink-AI/awesome-gpt-image-2-API-Prompts](https://github.com/Evolink-AI/awesome-gpt-image-2-API-Prompts)
-(CC0) and [jamez-bondos/awesome-gpt4o-images](https://github.com/jamez-bondos/awesome-gpt4o-images)
-(CC BY 4.0) — turned into templates, with brand and studio names replaced by descriptions of the
-style. Each names its source and original author; [recipes/CREDITS.md](recipes/CREDITS.md) lists
-them all. Every cover was drawn with gpt-image-2.6 from the recipe as shipped. A card takes its
-cover's own shape (from 1:2 tall to 3:1 wide), so nothing is cut off.
+**内置玩法。** 191 个，覆盖照片改造、手绘、杂志海报、知识图解、3D 手办、表情动图、插画、产品图、漫画九类，
+改编自 GitHub 上 star 最多、许可允许转载的提示词合集——
+[JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills)（MIT）、
+[PicoTrex/Awesome-Nano-Banana-images](https://github.com/PicoTrex/Awesome-Nano-Banana-images)（Apache-2.0）、
+[YouMind-OpenLab/awesome-gpt-image-2](https://github.com/YouMind-OpenLab/awesome-gpt-image-2) 和
+[awesome-nano-banana-pro-prompts](https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts)（CC BY 4.0）、
+[ZeroLu/awesome-nanobanana-pro](https://github.com/ZeroLu/awesome-nanobanana-pro)（MIT）、
+[freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2)（MIT）、
+[Evolink-AI/awesome-gpt-image-2-API-Prompts](https://github.com/Evolink-AI/awesome-gpt-image-2-API-Prompts)（CC0）、
+[jamez-bondos/awesome-gpt4o-images](https://github.com/jamez-bondos/awesome-gpt4o-images)（CC BY 4.0）——做成了模板，
+品牌和工作室的名字换成了对风格本身的描述。每个都注明来源和原作者，完整清单见 [recipes/CREDITS.md](recipes/CREDITS.md)。
+封面都是用 gpt-image-2.6 按内置的配方实际画出来的。卡片按封面本身的比例显示（最高 1:2，最宽 3:1），内容不会被裁掉。
 
-**Your own.** In the gallery, a picture's **⋯ menu** has:
+**我的玩法。** 图库里图片的 **⋯ 菜单**有：
 
-- **Make one like this** — the picture's own prompt and settings as a recipe: say what to change and
-  start a conversation with it.
-- **Make a recipe template** — has the model make it a template with blanks to fill in, like the
-  built-in recipes: a new conversation opens in the Images workspace with the request written, and
-  you press Send. The model reads the picture's prompt, turns the parts worth changing (words in the
-  picture, the subject, colors, style details) into blanks with labels and defaults in Chinese and
-  English, and keeps it under **Mine** with the picture as its cover (`image_recipes` `get` and
-  `save`). Each template takes one turn of the chat model.
-- **Save as a recipe, as is** — keeps the picture's prompt and settings under **Mine** unchanged, the
-  picture as its cover, with no blanks. Edit it there: rewrite a word as `{{name}}` to make it a
-  blank and give it a default.
-- **Download with its recipe** — the PNG with its recipe inside (see below).
+- **做同款**：把这张图自己的提示词和设置当作玩法，写上想改什么，开新对话。
+- **做成玩法模板**：交给模型做成一个像内置玩法那样带可填空的模板。在「图片」工作区新开一个对话，指令已经填好，按发送；
+  模型读出这张图的提示词，把值得换的部分（画面里的字、主体、配色、风格细节）改成空，写好中英文标签和默认值，存到「我的」，
+  图片当封面（`image_recipes` 的 `get` 和 `save`）。每做一次要用一轮对话模型。
+- **原样存为玩法**：把这张图的提示词和设置原样存到「我的」，图片当封面，不带可填的空。在那里可以编辑：把某个词改写成
+  `{{名字}}` 就成了一个空，再给它一个默认值。
+- **下载（附带配方）**：PNG 里带着它的配方（见下文）。
 
-A built-in or community recipe is copied to **Mine** with **Save to mine**. A recipe of your own
-without a cover takes the first picture drawn with it.
+内置和社区玩法可以用**存到我的**复制一份。自己的玩法没有封面时，第一张用它画的图自动成为封面。
 
-## Sharing recipes
+## 分享玩法
 
-Every recipe can be passed on three ways, none of which needs a server:
+每个玩法都有三种分享方式，都不需要服务器：
 
-- **Copy recipe code** — a short message with the title and one line, `dshimg1.…`, the recipe
-  compressed. It survives chat apps that recompress pictures. Paste it under **Recipes → Import**, or
-  straight into a conversation (the model imports it).
-- **Share card** — a PNG with the cover, title and summary, and the recipe in a text chunk. Drop it
-  on the Recipes tab (or pick it under Import) to import it. **Download with its recipe** does the
-  same for any picture. Apps that strip metadata lose the recipe but keep the picture; send the code
-  alongside.
-- **Share to…** — for your own recipes: pick one of the sources you follow that takes recipes as
-  issues. The panel shows exactly what will be public (title, summary, prompt, parameters; never
-  your photos or conversations), then opens a prefilled issue there. GitHub takes no picture
-  through a link, so opening a repository source's issue copies the cover first: paste it under
-  Cover (⌘V) and submit. In
-  [kadaliao/dsh-images-recipes](https://github.com/kadaliao/dsh-images-recipes) a workflow checks it
-  and opens a pull request, and once it is merged everyone sees it; in a repository source (below)
-  it is live as soon as it is submitted. A recipe with no blanks says, before it is shared, that
-  others can only draw the same picture again; **Make it a template first** has the model give it
-  blanks (one of yours is changed in place, with `image_recipes` `update`), to share after. A
-  recipe you shared there that went up without its cover says **No cover · Add it** on its card:
-  that copies the cover and opens the issue, to edit it in.
+- **复制配方串**：一小段文字，标题加一行 `dshimg1.…`（压缩后的配方）。聊天软件会压缩图片，文字不受影响。
+  在「玩法 → 导入」里粘贴，或者直接粘贴到对话里（模型会帮你导入）。
+- **分享卡**：一张 PNG，有封面、标题和简介，配方藏在图片的文本块里。把它拖到「玩法」页（或在「导入」里选择）就能
+  导入。**下载（附带配方）**对任何一张图都做同样的事。会抹掉图片元数据的软件只保留图片、丢掉配方，这时连同配方串一起发。
+- **分享到…**：只限你自己的玩法。从你订阅的源里选一个收 issue 投稿的，面板先完整展示将要公开的内容（标题、简介、
+  提示词、参数；你的照片和对话一律不会上传），再在那里打开一个已填好的 issue。GitHub 不能通过链接带图片，所以投到仓库
+  订阅源时，打开 issue 前会先把封面复制到剪贴板：在「封面」下面按 ⌘V 粘贴，提交。投到
+  [kadaliao/dsh-images-recipes](https://github.com/kadaliao/dsh-images-recipes) 的，工作流检查后开 PR，合并后所有人
+  都能看到；投到仓库订阅源（见下）的，提交就上架。要分享的玩法一个空都没有时，面板会提醒别人只能原样再画这一张，旁边的
+  **先做成模板**交给模型挑出可填的空（「我的」里的玩法直接在原玩法上改，用 `image_recipes` 的 `update`），做好后再分享。
+  你分享到仓库订阅源却漏了封面的玩法，卡片上会显示**缺封面 · 补上**：
+  点一下会复制封面并打开那个 issue，编辑 issue 把封面贴进去就行。
 
-**The community.** The Recipes tab follows the community index
-(`https://raw.githubusercontent.com/kadaliao/dsh-images-recipes/main/index.json`, with the jsDelivr
-mirror when GitHub cannot be reached): fetched the first time the tab opens, then once a week, kept
-under `~/.dsh/cache/images/recipes/`. Covers are fetched once and kept. Each community recipe's
-issue is its home: 👍 there is a vote, pictures in its comments are its works wall, and the index
-counts both daily; community recipes are sorted by votes. A picture made with a community recipe
-has **Post to the works wall** in its menu: it copies the picture and opens that page.
+**社区。** 「玩法」页默认订阅社区索引（`https://raw.githubusercontent.com/kadaliao/dsh-images-recipes/main/index.json`，
+GitHub 连不上时走 jsDelivr 镜像）：第一次打开时拉取，之后每周一次，缓存在 `~/.dsh/cache/images/recipes/`。封面只下载
+一次并缓存。每个社区玩法的 issue 就是它的主页：在那里点 👍 就是投票，评论里的图就是作品墙，索引每天统计一次；社区玩法
+按投票数排序。用社区玩法画的图，菜单里有**晒到作品墙**：复制图片并打开那个页面。
 
-**Sources.** **Recipes → Sources** lists the sources you follow: remove the community one, refresh,
-or add another. A source is one of:
+**订阅源。** 「玩法 → 订阅源」列出你订阅的源：可以移除社区源、刷新，或者添加别的。订阅源有两种：
 
-- **A repository** — paste a public repository's link, on github.com or a GitHub Enterprise server
-  (`https://<server>/<owner>/<repo>`). Its open issues are its recipes: an issue counts when it
-  carries a recipe code (or a recipe's JSON), its first picture is the cover, whoever opened it is
-  the author, its 👍 are votes and its comments the works wall. There is no review: submitting the
-  issue puts the recipe up, editing it changes it, closing it takes it down. It is read without
-  logging in, every ten minutes (hourly on github.com, whose anonymous API allows little), and when
-  the Recipes tab opens after that. This is the easy way for a team to share recipes: any public
-  repository with issues on will do.
-- **An index** — any HTTPS URL serving a JSON index in the community's format (described in the
-  community repository's README), read once a week.
+- **仓库**：粘贴一个 public 仓库的地址，github.com 或公司自建的 GitHub Enterprise 都行（`https://<服务器>/<owner>/<repo>`）。
+  它打开着的 issue 就是它的玩法：issue 里带配方串（或配方 JSON）就算一个，第一张图是封面，开 issue 的人是作者，👍 是投票，
+  评论是作品墙。没有审核：提交 issue 就上架，编辑 issue 就修改，关掉 issue 就下架。插件不登录读取，每十分钟一次
+  （github.com 的匿名接口额度很少，改为每小时一次），过了这个时间再打开「玩法」页也会重新读。团队想互相分享玩法，
+  这是最省事的办法：随便一个开着 issue 的 public 仓库就行。
+- **索引**：任何通过 HTTPS 提供社区同格式 JSON 索引的地址（格式见社区仓库的说明），每周读取一次。
 
-Nothing about you is sent to fetch a source or a cover. A community recipe is someone else's text:
-it is checked like any recipe (the community's is also reviewed before it is merged; a repository
-source's is not), and the model is told to use it as a prompt for the image model, never as
-instructions to itself.
+拉取订阅源和封面时不会发送任何关于你的信息。社区玩法是别人写的文字：它和所有玩法一样要通过格式检查（社区的玩法合并前
+还要经过人工审核，仓库订阅源的没有），模型也会被告知只能把它当作生图提示词使用，不能当作对自己的指令。
 
-## Settings
+## 设置
 
-**Settings** in the Images panel opens a drawer with everything the plugin needs; it saves to
-`~/.dsh/cache/images/settings.json` and applies to the next picture, no reload needed.
+「图片」面板右上角的**设置**打开一个抽屉，插件需要的都在里面；保存到
+`~/.dsh/cache/images/settings.json`，下一张图就生效，不用重载。
 
-- **Connection** — the provider route: *the session's provider* (the one your chat model uses),
-  any provider configured in Harness, or a *custom base URL*. The base URL can be overridden for
-  any of them. The **API key** field takes a key for this plugin alone; it is kept in the Harness
-  credential store on this machine (`DSH_IMAGES_API_KEY`), is never shown again, and wins over the
-  provider's key. Leave it empty to keep using the provider's. **Test connection & list models**
-  calls the provider's `/models` and offers the image models it lists.
-- **Model** — the image model id as the provider names it, a default size and a quality tier.
-  The model field searches as you type: models you used before, the provider's listing (after
-  **Test connection**) and the image models in the [LiteLLM price list](#cost). Letters may be
-  skipped (`img26` finds `gpt-image-2.6-sunburst`), and price-list names take the routing prefix
-  the field already has (`sub2api/`), or the one you type. Any other id can still be typed. Under
-  the field the drawer says how that model will be billed.
-- **Billing** — a price per image and a currency, used only for a model that neither reports
-  usage nor appears in any price list. Below it: the state of the LiteLLM price list, with
-  **Update**, and how many pictures were made and what they cost, by model.
+- **连接** —— 走哪条供应商线路：*跟随会话*（聊天模型用的那个）、Harness 里配置过的任一供应商、或
+  *自定义地址*。接口地址都可以另填。**API 密钥**只给这个插件用，存在本机的 Harness 凭据库里
+  （`DSH_IMAGES_API_KEY`），不会再显示，优先于供应商自己的密钥；留空就继续用供应商的。
+  **测试连接并拉取模型**会请求供应商的 `/models`，把其中的生图模型列出来供选。
+- **模型** —— 按供应商叫法填的模型 id、默认尺寸、质量档。模型框输入即搜：用过的模型、供应商列出
+  的模型（**测试连接**之后）、[LiteLLM 价目表](#费用)里的生图模型。字母可以跳着打（`img26` 能找到
+  `gpt-image-2.6-sunburst`），价目表里的名字会自动带上框里已有的路由前缀（`sub2api/`），或你输入的
+  前缀。列表里没有的 id 照样可以直接填。模型框下面会说明这个模型按什么计价。
+- **计费** —— 每张单价和币种，只在模型既不返回用量、也不在任何价目表里时用。下面是 LiteLLM 价目表
+  的状态（带**更新**按钮），以及已生成的张数和费用，按模型分列。
 
-The same values can be set on the plugin's row in your profile patch (`cordis.patch.yml`); the
-drawer's values take precedence, and clearing a field in the drawer falls back to the row.
+同样的值也可以写在 profile patch（`cordis.patch.yml`）里插件那一行；抽屉里的优先，抽屉里清空某项
+就回落到 patch 的值。
 
-| Key | Default | What it does |
+| 键 | 默认 | 作用 |
 | --- | --- | --- |
-| `model` | — | The image model to ask for, as your provider names it: `gpt-image-1.5`, `gpt-image-1`, `doubao-seedream-4-0-250828`, … |
-| `provider` | your session's | The provider route (an `llm-pi-ai` provider name) whose `baseURL` and key are used; `custom` for a bare `baseURL`. |
-| `baseURL` / `apiKeyEnv` | from the provider | Where the request goes and which credential signs it, for a provider that is not configured in Harness. |
-| `size` | `1024x1024` | The size when the model does not ask for another (`1536x1024`, `1024x1536`, `auto`). |
-| `quality` | model default | A quality tier (`low`, `medium`, `high`) for models that take one. |
-| `pricePerImage` / `currency` | — / `USD` | A flat price for a model the plugin cannot price itself. |
-| `priceCatalog` | LiteLLM | The fallback price list: `false` for none, or the URL of another file in LiteLLM's format. |
-| `enabled` | `true` | `false` keeps the gallery but offers no tool to the model; `/images on` and `/images off` flip it at runtime. |
-| `timeoutMs` | `180000` | How long one request may take. |
-| `workdir` | `~/.dsh/images/workspace` | The folder of the Images workspace, where a recipe's conversation starts. |
+| `model` | — | 要用的生图模型，按供应商的叫法：`gpt-image-1.5`、`gpt-image-1`、`doubao-seedream-4-0-250828`…… |
+| `provider` | 会话用的那个 | 用哪个供应商（`llm-pi-ai` 里的 provider 名）的 `baseURL` 和 key；填 `custom` 表示只用 `baseURL`。 |
+| `baseURL` / `apiKeyEnv` | 取自供应商 | 请求地址和签名用的凭据名，给 Harness 里没配置的供应商用。 |
+| `size` | `1024x1024` | 模型没另外指定时的尺寸（`1536x1024`、`1024x1536`、`auto`）。 |
+| `quality` | 模型默认 | 支持质量档的模型用（`low`、`medium`、`high`）。 |
+| `pricePerImage` / `currency` | — / `USD` | 插件算不出价格的模型，按这个单价计。 |
+| `priceCatalog` | LiteLLM | 兜底价目表：`false` 表示不用，或填另一个 LiteLLM 格式文件的 URL。 |
+| `enabled` | `true` | `false` 保留图库但不给模型提供工具；运行时用 `/images on`、`/images off` 切换。 |
+| `timeoutMs` | `180000` | 一次请求最多等多久。 |
+| `workdir` | `~/.dsh/images/workspace` | 图片工作区的文件夹，玩法新开的对话都在这里。 |
 
 ```yaml
 - id: images
@@ -274,95 +214,74 @@ drawer's values take precedence, and clearing a field in the drawer falls back t
     # size: 1536x1024
 ```
 
-The request is an OpenAI-compatible `POST <baseURL>/images/generations` with `model`, `prompt`,
-`size` and `n`, so any provider or gateway that serves that endpoint works, including local
-gateways that route many vendors behind one base URL. The reply may carry the image inline
-(`b64_json`) or as a URL; both are taken.
+请求是 OpenAI 兼容的 `POST <baseURL>/images/generations`，带 `model`、`prompt`、`size`、`n`，
+所以凡是提供这个接口的供应商或网关都能用，包括把多家厂商挂在一个地址后面的本地网关。返回里图片
+内联（`b64_json`）或给 URL 都行。
 
-## Cost
+## 费用
 
-Each call is one request to the image model, billed by your provider like any image generation.
-The only other request the plugin makes is the price-list download described below. The picture is also placed in the conversation for the model to see, which
-costs the image-input tokens of your chat model; a text-only model gets a one-line placeholder
-instead.
+每次调用是向生图模型发一次请求，按供应商的生图计费。除此之外插件只会发一种请求：下面说的价目表下载。图也会放进对话给模型看，这部分
+按聊天模型的图片输入 token 计；纯文本模型收到的是一行占位说明。
 
-Every picture carries an estimate of what it cost, from the first of these that applies:
+每张图都带一个费用估算，按下面的顺序取第一个能用的：
 
-1. **The provider's usage report.** OpenAI's image models return `usage` with input and output
-   tokens; the plugin prices them with the vendor's token rates (gpt-image-1.5: text in $5/M,
-   image out $32/M; gpt-image-1: $5/M and $40/M; gpt-image-1-mini: $2/M and $8/M). Newer models
-   take their rates from the LiteLLM price list (gpt-image-2.6-sunburst: $5/M and $30/M). This is
-   exact.
-2. **A price the provider states** for the model in its `/models` listing (OpenRouter-style
-   `pricing.image`), learned when you test the connection.
-3. **The built-in price list** of flat per-image prices (gpt-image-1.5, gpt-image-1,
-   gpt-image-1-mini, DALL·E 3 and 2, Doubao Seedream), by quality and shape, checked against the
-   vendors' pages on the date the settings drawer shows.
-4. **The LiteLLM price list**'s per-image price, for a model none of the above know (Grok Imagine,
-   FLUX, Gemini image models, …).
-5. **Your price per image** from the Billing section.
+1. **供应商返回的用量。** OpenAI 的生图模型会返回 `usage`（输入、输出 token），插件按官方 token
+   单价计算（gpt-image-1.5：文本输入 $5/M、图片输出 $32/M；gpt-image-1：$5/M 和 $40/M；
+   gpt-image-1-mini：$2/M 和 $8/M）。更新的模型从 LiteLLM 价目表取 token 单价
+   （gpt-image-2.6-sunburst：$5/M 和 $30/M）。这是精确值。
+2. **供应商报价**：`/models` 列表里带的每张单价（OpenRouter 风格的 `pricing.image`），测试连接时
+   学到。
+3. **内置价目表**：按质量和形状的每张固定价（gpt-image-1.5、gpt-image-1、gpt-image-1-mini、
+   DALL·E 3 和 2、豆包 Seedream），核对日期显示在设置抽屉里。
+4. **LiteLLM 价目表**的每张单价，给上面都不认识的模型用（Grok Imagine、FLUX、Gemini 生图模型等）。
+5. **你填的每张单价**（计费一节）。
 
-The LiteLLM price list is LiteLLM's public
-[`model_prices_and_context_window.json`](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json), which
-many gateways bill by. The plugin downloads it the first time a model needs it (from GitHub, or
-the jsDelivr mirror), keeps its image models in `~/.dsh/cache/images/price-catalog.json`, and
-refreshes it once a week. A model id is looked up without its routing prefix
-(`sub2api/gpt-image-2.6-sunburst` → `gpt-image-2.6-sunburst`), with the vendor's own price
-preferred over a reseller's. Nothing about you or your prompts is sent; set `priceCatalog: false`
-to skip it.
+LiteLLM 价目表就是 LiteLLM 公开维护的
+[`model_prices_and_context_window.json`](https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json)，
+很多网关也按它计费。插件在第一次需要时下载（GitHub，或 jsDelivr 镜像），只把其中的生图模型存到
+`~/.dsh/cache/images/price-catalog.json`，每周刷新一次。查价时会去掉模型 id 的路由前缀
+（`sub2api/gpt-image-2.6-sunburst` → `gpt-image-2.6-sunburst`），同一模型优先取厂商自己的价，
+而不是转售商的。下载不带任何关于你或提示词的信息；不想要可以设 `priceCatalog: false`。
 
-A model none of these cover shows no cost. Estimates are in the vendor's list currency; a gateway
-that bills differently (a subscription, a markup) will differ.
+都没有的模型不显示费用。估算用的是厂商价目的币种；网关若按订阅或加价计费，会与之不同。
 
-## If something looks wrong
+## 看起来不对时
 
-- **`No image model is configured`** — open Images → Settings and fill in the model.
-- **`Provider "…" has no baseURL the images plugin can read`** — the session's provider is not an
-  `llm-pi-ai` provider the plugin can see; pick another in Settings, or choose *Custom base URL*.
-- **Test connection lists no image models** — many gateways serve image models without listing
-  them; type the id anyway and generate once.
-- **The cost looks wrong or is missing** — the Settings drawer says how the model is priced; set a
-  price per image for a model no price list knows.
-- **The LiteLLM price list could not be downloaded** — the plugin needs `raw.githubusercontent.com`
-  or `cdn.jsdelivr.net`; press **Download** under Billing to try again, or set a price per image.
-- **The provider answers `4xx`/`5xx`** — the message is the provider's own: a model the account
-  cannot use, an unsupported `size` or `quality`, no quota. Change the setting it names.
-- **The model does not draw and describes the image in words instead** — check `/images` says the
-  tool is on, and that the plugin is enabled in **Plugins → Installed**. A model that was mid-turn
-  when the plugin loaded sees the tool on its next turn.
-- **The picture is not in the conversation after a page refresh** — the row is drawn by the Web
-  Client half; refresh once more after installing or updating.
-- **The Images panel is empty though pictures were made** — the gallery lives under
-  `~/.dsh/cache/images/`; it is per DSH home, so a different `DSH_HOME` has a different gallery.
+- **`No image model is configured`** —— 打开 图片 → 设置，填上模型。
+- **`Provider "…" has no baseURL the images plugin can read`** —— 会话用的供应商不是插件能读到的
+  `llm-pi-ai` provider；在设置里换一个，或选「自定义地址」。
+- **测试连接列不出生图模型** —— 很多网关提供生图模型却不列出来；直接填 id 生成一张试试。
+- **费用不对或没有** —— 设置抽屉里写着这个模型按什么计价；所有价目表都不认识的模型，填一个每张单价。
+- **LiteLLM 价目表下载失败** —— 插件要能访问 `raw.githubusercontent.com` 或 `cdn.jsdelivr.net`；
+  在计费一节点**下载**重试，或者填一个每张单价。
+- **供应商返回 `4xx`/`5xx`** —— 消息是供应商原话：账号不能用这个模型、不支持这个 `size` 或
+  `quality`、没额度。按它说的改。
+- **模型不画图，用文字描述代替** —— 看 `/images` 是否显示工具已开启，以及 **Plugins → Installed**
+  里插件已启用。插件加载时正在进行的回合，下个回合才能看到工具。
+- **刷新页面后对话里没有图** —— 这一行由 Web Client 半边绘制；安装或更新后再刷新一次。
+- **明明画过，图库却是空的** —— 图库在 `~/.dsh/cache/images/` 下，按 DSH home 分开；换了
+  `DSH_HOME` 就是另一个图库。
 
-## How it works
+## 原理
 
-The Host half registers `generate_image` in the Harness tool registry. On a call it takes the
-drawer's settings over the row's, reads the provider's `baseURL` and credential reference from the
-live Harness settings, resolves the key through the credentials service (the drawer's own key
-first), posts the request, prices the reply (looking the model up in the cached LiteLLM list when
-nothing closer knows it), and saves the bytes twice: in the Harness attachment store,
-so the tool result carries the image itself (`{ type: 'image' }`) and the conversation shows it; and
-under `~/.dsh/cache/images/files/`, with an index of prompt, model, size and session, which is what
-the panel reads through loopback routes on the Harness web server. With `frames`, the
-sprite sheet goes to the attachment store and the GIF built from it (`lib/animate.mjs`: PNG decoding,
-median-cut palette and LZW in plain JavaScript, no dependencies) to the gallery.
+Host 半边把 `generate_image` 注册进 Harness 的工具注册表。被调用时，抽屉里的设置优先于 patch，
+从实时 Harness 设置里读供应商的 `baseURL` 和凭据名，通过凭据服务拿到 key（抽屉里存的优先），
+发出请求，给回复估价（近处都查不到的模型去本地缓存的 LiteLLM 价目表里查），然后把图存两份：一份进 Harness 附件存储，让
+工具结果自带图片（`{ type: 'image' }`）、对话里能显示；一份在 `~/.dsh/cache/images/files/`，并记下
+提示词、模型、尺寸和会话，面板通过 Harness web server 上的本机回环路由读的就是这份。带 `frames` 时，精灵图进附件存储，
+由它生成的 GIF（`lib/animate.mjs`：PNG 解码、中位切分调色板和 LZW 都是纯 JavaScript，无依赖）进图库。
 
-Recipes live in `lib/recipes.mjs` (the format, templates, recipe codes and PNG text chunks) and
-`lib/library.mjs` (built-in, own and community recipes behind one list of refs: `builtin:…`,
-`mine:…`, `community:…`, `image:<id>`). The built-in ones ship in `recipes/builtin.json` with their
-covers; your own are in `~/.dsh/cache/images/recipes/mine.json`. `generate_image` takes `recipe` and
-`slots`, renders the template, applies its size and frames, and records the recipe on the picture;
-`image_recipes` searches, reads, saves, changes (your own only) and imports them for the model.
+玩法在 `lib/recipes.mjs`（格式、模板、配方串和 PNG 文本块）和 `lib/library.mjs`（内置、我的和社区玩法合成一个
+列表，用 ref 命名：`builtin:…`、`mine:…`、`community:…`、`image:<id>`）。内置玩法连同封面打包在
+`recipes/builtin.json`；你自己的在 `~/.dsh/cache/images/recipes/mine.json`。`generate_image` 接收 `recipe` 和
+`slots`，套好模板、带上玩法的尺寸和帧数，并把玩法记在图片上；`image_recipes` 供模型搜索、读取、保存、修改（只限「我的」）和导入玩法。
 
-The Client half draws the tool's card, the result row outside the turn fold, the sidebar entry and
-the panel. Nothing is written to the Session log beyond the tool call and its result, which the
-Harness records as for any tool.
+Client 半边绘制工具卡片、折叠外的结果行、侧栏入口和面板。除了工具调用和结果（Harness 对任何工具
+都会记录），不往 Session log 写别的。
 
 <details>
-<summary>Development</summary>
+<summary>开发</summary>
 
-Repository layout, tests, and the release checklist are in
-[DEVELOPMENT.md](https://github.com/kadaliao/dsh-plugins/blob/main/DEVELOPMENT.md).
+仓库结构、测试和发布清单见 [DEVELOPMENT.md](https://github.com/kadaliao/dsh-plugins/blob/main/DEVELOPMENT.md)。
 
 </details>
