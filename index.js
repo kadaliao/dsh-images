@@ -1256,16 +1256,26 @@ export function submitUrl(recipe, lang = 'en', home = `https://github.com/${COMM
 /**
  * The new-issue page of a repository whose open issues are its recipes, the
  * body filled in: no issue form is needed, so any repository can be one.
+ * GitHub takes no picture through a link, so the cover is left for the user to
+ * paste (the panel copies it as it opens the page) or drag in.
  * @param {string} home - the repository's page, `https://<host>/<owner>/<repo>`
+ * @param {{cover?: boolean}} [options] - whether the recipe has a cover to paste
  */
-export function repoSubmitUrl(recipe, lang = 'en', home) {
+export function repoSubmitUrl(recipe, lang = 'en', home, { cover = false } = {}) {
   const zh = String(lang).toLowerCase().startsWith('zh');
+  const coverHint = cover
+    ? zh
+      ? '<!-- 👇 在下面这行按 ⌘V（Windows 用 Ctrl+V）粘贴封面：Images 打开这个页面时已经把它复制到剪贴板了。 -->'
+      : '<!-- 👇 Paste the cover on the line below with ⌘V (Ctrl+V on Windows): Images copied it to the clipboard as it opened this page. -->'
+    : zh
+      ? '<!-- 👇 把一张用这个玩法画的图拖到下面这行：issue 里的第一张图就是封面。 -->'
+      : '<!-- 👇 Drag a picture made with this recipe onto the line below: the first picture in the issue is the cover. -->';
   const body = [
     zh ? '<!-- 这是一个 DSH Images 玩法。提交后，订阅这个仓库的人在「玩法」里就能看到；关掉这个 issue 就是下架。 -->' : '<!-- A DSH Images recipe. Once submitted, everyone following this repository sees it under Recipes; closing the issue takes it down. -->',
     '',
     '### 封面 · Cover',
     '',
-    zh ? '<!-- 把一张用这个玩法画的图拖到这里。 -->' : '<!-- Drag a picture made with this recipe here. -->',
+    coverHint,
     '',
     '',
     '### 说明 · Notes',
@@ -1284,6 +1294,7 @@ export function repoSubmitUrl(recipe, lang = 'en', home) {
 
 /** Where a recipe of the user's can be shared: each source that takes new recipes as issues. */
 function shareTargets(library, recipe, lang) {
+  const cover = Boolean(library.coverFileOf(recipe));
   const remote = library.sources().filter((s) => s.kind === 'remote' && s.home);
   // A repository where a new issue is live at once comes first: it is one the user added.
   remote.sort((a, b) => (a.issues === b.issues ? 0 : a.issues === 'open' ? -1 : 1));
@@ -1293,7 +1304,7 @@ function shareTargets(library, recipe, lang) {
     home: s.home,
     issues: s.issues,
     default: Boolean(s.default),
-    url: s.issues === 'open' ? repoSubmitUrl(recipe, lang, s.home) : submitUrl(recipe, lang, s.home),
+    url: s.issues === 'open' ? repoSubmitUrl(recipe, lang, s.home, { cover }) : submitUrl(recipe, lang, s.home),
   }));
 }
 

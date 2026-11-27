@@ -1096,8 +1096,7 @@ window.__ModuleLoader__.load({
           const url = issuePage(recipe);
           if (!url) return;
           setSheet(null);
-          Promise.resolve()
-            .then(() => copyImage(item.url))
+          copyImage(item.url)
             .then(
               () => setToast(t('showOffCopied')),
               () => setToast(t('showOffManual')),
@@ -2095,19 +2094,29 @@ window.__ModuleLoader__.load({
         img.src = src;
       });
     }
-    /** Put a picture on the clipboard as a PNG (a GIF goes as its first frame). */
+    /**
+     * Put a picture on the clipboard as a PNG (a GIF goes as its first frame). The
+     * write is asked for at once, with the picture still to come, so it counts as
+     * part of the click that asked for it; a browser that wants the picture in hand
+     * gets it after.
+     */
     async function copyImage(url) {
-      const res = await fetch(url, { credentials: 'same-origin' });
-      let blob = await res.blob();
-      if (blob.type !== 'image/png') {
+      const png = (async () => {
+        const res = await fetch(url, { credentials: 'same-origin' });
+        const blob = await res.blob();
+        if (blob.type === 'image/png') return blob;
         const img = await loadImageEl(url);
         const canvas = document.createElement('canvas');
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
         canvas.getContext('2d').drawImage(img, 0, 0);
-        blob = await new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('png'))), 'image/png'));
+        return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('png'))), 'image/png'));
+      })();
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+      } catch {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': await png })]);
       }
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
     }
 
     /** Lay `text` out in at most `maxLines` lines of `width`, ending in … when cut; returns the next y. */
@@ -2734,10 +2743,16 @@ window.__ModuleLoader__.load({
               primary: true,
               'data-dsh-images-open-github': true,
               onClick: () => {
+                // The cover goes to the clipboard first (the page would take the focus it needs),
+                // so it is one paste in the issue.
                 const targets = share.targets ?? [{ url: share.url }];
-                openExternal((targets[target] ?? targets[0]).url);
-                setShare(null);
-                onToast(t('shareOpened'));
+                const url = (targets[target] ?? targets[0]).url;
+                const copied = recipe.coverUrl ? copyImage(recipe.coverUrl).then(() => true, () => false) : Promise.resolve(false);
+                copied.then((ok) => {
+                  openExternal(url);
+                  setShare(null);
+                  onToast(t(ok ? 'shareOpenedPaste' : 'shareOpened'));
+                });
               },
             },
             t('openGitHub'),
@@ -3075,7 +3090,7 @@ window.__ModuleLoader__.load({
         editSlotDefault: "Default",
         shareIntro: "This opens a new issue in the community repository on GitHub with the recipe filled in. Once it is reviewed, everyone who follows the community source sees it.",
         sharePrivacy: "Shared publicly: the title, summary, prompt and parameters above. Your photos and conversations are not shared.",
-        shareCover: "GitHub cannot take a picture through a link: download the cover here and drag it into the issue's Cover field.",
+        shareCover: "GitHub cannot take a picture through a link, so Open GitHub copies the cover to the clipboard: paste it into the issue's Cover field (⌘V, or Ctrl+V on Windows). Or download it here and drag it in.",
         shareNoCover: "This recipe has no cover yet: drag a picture made with it into the issue's Cover field.",
         shareTitle: "Share recipe",
         shareTo: "Share to",
@@ -3083,7 +3098,7 @@ window.__ModuleLoader__.load({
         shareReviewed: "reviewed first",
         shareIntroOpen: "This opens a new issue in {name} with the recipe filled in. Once you submit it, everyone who follows that repository sees it under Recipes; there is no review. Edit the issue to change the recipe, close it to take it down.",
         sharePrivacyOpen: "Shared with everyone who can open that repository: the title, summary, prompt and parameters above. Your photos and conversations are not shared.",
-        shareCoverOpen: "GitHub cannot take a picture through a link: download the cover here and drag it into the issue. Its first picture is the cover.",
+        shareCoverOpen: "GitHub cannot take a picture through a link, so Open GitHub copies the cover to the clipboard: paste it into the issue under Cover (⌘V, or Ctrl+V on Windows). The first picture in the issue is the cover.",
         shareNoCoverOpen: "This recipe has no cover yet: drag a picture made with it into the issue. Its first picture is the cover.",
         needsInputs: "Works on {n} picture(s) of yours",
         needsInputsHint: "Attach them in the composer before you send.",
@@ -3098,6 +3113,7 @@ window.__ModuleLoader__.load({
         downloadCover: "Download cover",
         openGitHub: "Open GitHub",
         shareOpened: "Opened GitHub: check the issue and submit it there.",
+        shareOpenedPaste: "Opened GitHub, and the cover is on the clipboard: paste it under Cover, then submit.",
         copyCode: "Copy recipe code",
         shareCard: "Share card",
         shareCommunity: "Share to…",
@@ -3308,7 +3324,7 @@ window.__ModuleLoader__.load({
         editSlotDefault: "默认值",
         shareIntro: "这会在 GitHub 的社区仓库里新开一个 issue，配方已经填好。审核通过后，所有订阅社区源的人都能看到它。",
         sharePrivacy: "公开分享的内容就是上面这些：标题、简介、提示词和参数。你的照片和对话不会被分享。",
-        shareCover: "GitHub 不能通过链接带图片：先在这里下载封面，再把它拖进 issue 的「封面」栏。",
+        shareCover: "GitHub 不能通过链接带图片，所以点「打开 GitHub」时会把封面复制到剪贴板：在 issue 的「封面」栏里粘贴（⌘V，Windows 用 Ctrl+V）就行。也可以在这里下载封面再拖进去。",
         shareNoCover: "这个玩法还没有封面：把一张用它画的图拖进 issue 的「封面」栏。",
         shareTitle: "分享玩法",
         shareTo: "分享到",
@@ -3316,7 +3332,7 @@ window.__ModuleLoader__.load({
         shareReviewed: "审核后上架",
         shareIntroOpen: "这会在「{name}」里新开一个 issue，配方已经填好。提交后，订阅这个仓库的人就能在「玩法」里看到它，不用审核。想修改就编辑这个 issue，想下架就关掉它。",
         sharePrivacyOpen: "能打开这个仓库的人都能看到上面这些：标题、简介、提示词和参数。你的照片和对话不会被分享。",
-        shareCoverOpen: "GitHub 不能通过链接带图片：先在这里下载封面，再把它拖进 issue 里。issue 里的第一张图就是封面。",
+        shareCoverOpen: "GitHub 不能通过链接带图片，所以点「打开 GitHub」时会把封面复制到剪贴板：在 issue 的「封面」下面粘贴（⌘V，Windows 用 Ctrl+V）就行。issue 里的第一张图就是封面。",
         shareNoCoverOpen: "这个玩法还没有封面：把一张用它画的图拖进 issue 里。issue 里的第一张图就是封面。",
         needsInputs: "需要你的 {n} 张图",
         needsInputsHint: "发送前在输入框里附上。",
@@ -3331,6 +3347,7 @@ window.__ModuleLoader__.load({
         downloadCover: "下载封面",
         openGitHub: "打开 GitHub",
         shareOpened: "已打开 GitHub，确认无误后在那里提交。",
+        shareOpenedPaste: "已打开 GitHub，封面已复制：在「封面」下面粘贴，再提交。",
         copyCode: "复制配方串",
         shareCard: "分享卡",
         shareCommunity: "分享到…",

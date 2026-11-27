@@ -317,12 +317,15 @@ test('a repository link is a source of its own: its open issues are the recipes'
   let now = 1_000_000;
   const home = 'https://ghe.example.com/team/recipes';
   const api = 'https://ghe.example.com/api/v3/repos/team/recipes';
-  const share = new URL(repoSubmitUrl(FIGURINE, 'zh', home));
+  assert.match(new URL(repoSubmitUrl(FIGURINE, 'zh', home)).searchParams.get('body'), /把一张用这个玩法画的图拖到下面这行/);
+  const share = new URL(repoSubmitUrl(FIGURINE, 'zh', home, { cover: true }));
+  assert.match(share.searchParams.get('body'), /按 ⌘V（Windows 用 Ctrl\+V）粘贴封面/);
   assert.equal(share.origin + share.pathname, `${home}/issues/new`);
   assert.equal(share.searchParams.get('title'), '[玩法] 桌面手办');
   const attachment = 'https://ghe.example.com/user-attachments/assets/0b7e-cover';
   // The body the share link fills in, once a cover was dropped into it.
-  const shared = share.searchParams.get('body').replace('<!-- 把一张用这个玩法画的图拖到这里。 -->', `<img width="512" alt="x" src="${attachment}" />`);
+  const shared = share.searchParams.get('body').replace(/(### 封面 · Cover\n\n<!--[^>]*-->\n)/, `$1<img width="512" alt="x" src="${attachment}" />`);
+  assert.ok(shared.includes(attachment));
   const issue = (number, body, extra = {}) => ({ number, body, user: { login: `u${number}` }, comments: 1, reactions: { '+1': number }, created_at: '2026-11-27T00:00:00Z', updated_at: '2026-11-27T01:00:00Z', ...extra });
   let issues = [
     issue(7, shared),

@@ -921,7 +921,7 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
       coverUrl: '/__dsh_images/recipe-cover/builtin%3Adesk-figurine?v=1',
       uses: 2,
     },
-    { ref: 'mine:neon', origin: 'mine', id: 'neon', title: { en: 'Neon sign' }, summary: {}, category: 'illustration', tags: [], inputs: [], slots: [], prompt: 'neon', params: {}, createdAt: 5, uses: 0 },
+    { ref: 'mine:neon', origin: 'mine', id: 'neon', title: { en: 'Neon sign' }, summary: {}, category: 'illustration', tags: [], inputs: [], slots: [], prompt: 'neon', params: {}, createdAt: 5, uses: 0, coverUrl: '/__dsh_images/recipe-cover/mine%3Aneon?v=1' },
     { ref: 'community:riso', origin: 'community', id: 'riso', title: { en: 'Riso poster' }, summary: {}, category: 'editorial', tags: [], inputs: [], slots: [], prompt: 'riso', params: { size: '1024x1536' }, author: 'github:ana', issue: 3, repo: 'kadaliao/dsh-images-recipes', stats: { votes: 4, works: 1 }, uses: 0 },
   ];
   const posts = [];
@@ -946,6 +946,7 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
       }
       return { ok: true, json: async () => (body.action === 'export' ? { ok: true, code: 'dshimg1.abc', text: 'share text dshimg1.abc' } : { ok: true }) };
     }
+    if (String(url).startsWith('/__dsh_images/recipe-cover/')) return { ok: true, blob: async () => ({ type: 'image/png', from: String(url) }) };
     if (String(url).startsWith('/__dsh_images/recipes')) {
       return { ok: true, json: async () => ({ ok: true, sources: [{ key: 'builtin', kind: 'builtin', count: 1 }, { key: 'mine', kind: 'mine', count: 1 }, { key: 'community', kind: 'remote', default: true, count: 1 }], recipes }) };
     }
@@ -1039,18 +1040,35 @@ test('the Recipes tab lists recipes, filters them, and a recipe starts a convers
     assert.match(shareText, /Team recipes +live once submitted/);
     assert.match(shareText, /DSH Images community +reviewed first/);
     assert.match(shareText, /opens a new issue in Team recipes/);
+    assert.match(shareText, /Open GitHub copies the cover to the clipboard/);
     const opened = [];
-    globalThis.window.open = (url) => opened.push(url);
+    const clipboard = [];
+    globalThis.window.open = (url) => opened.push({ url, clipboard: clipboard.length });
+    globalThis.ClipboardItem = class {
+      constructor(items) {
+        this.items = items;
+      }
+    };
+    Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, value: { write: async (items) => clipboard.push(await items[0].items['image/png']) } });
     findAll(targets[1], (n) => n.type === 'input')[0].props.onChange();
     hooks.rewind();
     tree = panel({});
     shareText = collect(tree).join(' ');
     assert.match(shareText, /Once it is reviewed/);
     findAll(tree, (n) => n.props['data-dsh-images-open-github'])[0].props.onClick();
-    assert.deepEqual(opened, ['https://github.com/kadaliao/dsh-images-recipes/issues/new?template=recipe.yml']);
+    await flush();
+    await flush();
+    // The cover was on the clipboard before the page opened.
+    assert.deepEqual(clipboard, [{ type: 'image/png', from: '/__dsh_images/recipe-cover/mine%3Aneon?v=1' }]);
+    assert.deepEqual(opened, [{ url: 'https://github.com/kadaliao/dsh-images-recipes/issues/new?template=recipe.yml', clipboard: 1 }]);
+    hooks.rewind();
+    tree = panel({});
+    assert.match(collect(tree).join(' '), /the cover is on the clipboard: paste it under Cover/);
   } finally {
     delete globalThis.localStorage;
     delete globalThis.window.open;
+    delete globalThis.ClipboardItem;
+    delete globalThis.navigator.clipboard;
   }
 });
 
